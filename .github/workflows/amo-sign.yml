@@ -1,0 +1,126 @@
+name: Mozilla signed XPI publisher
+
+on:
+  push:
+    branches:
+      - dev-modernization
+    paths:
+      - .release/signing.json
+
+permissions:
+  contents: write
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout signing request
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Read signing request
+        id: request
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const cfg = JSON.parse(fs.readFileSync('.release/signing.json', 'utf8'));
+          if (!/^v\d+\.\d+\.\d+$/.test(cfg.tag ?? '')) throw new Error('Invalid release tag');
+          if (!/^[0-9a-f]{40}$/.test(cfg.target_sha ?? '')) throw new Error('target_sha must be a full commit SHA');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag=${cfg.tag}\ntarget_sha=${cfg.target_sha}\n`);
+          NODE
+
+      - name: Verify AMO signing credentials are configured
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        shell: bash
+        run: |
+          : "${AMO_JWT_ISSUER:?Missing GitHub Actions secret AMO_JWT_ISSUER}"
+          : "${AMO_JWT_SECRET:?Missing GitHub Actions secret AMO_JWT_SECRET}"
+
+      - name: Verify existing GitHub release target
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.request.outputs.tag }}
+          TARGET_SHA: ${{ steps.request.outputs.target_sha }}
+        shell: bash
+        run: |
+          actual_target="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" --jq '.target_commitish')"
+          test "$actual_target" = "$TARGET_SHA"
+
+      - name: Checkout immutable release target
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.request.outputs.target_sha }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Verify extension identity and version
+        env:
+          RELEASE_TAG: ${{ steps.request.outputs.tag }}
+          TARGET_SHA: ${{ steps.request.outputs.target_sha }}
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TARGET_SHA"
+          node <<'NODE'
+          const fs = require('node:fs');
+          const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+          if (`v${manifest.version}` !== process.env.RELEASE_TAG) {
+            throw new Error(`Release tag ${process.env.RELEASE_TAG} does not match manifest ${manifest.version}`);
+          }
+          const id = manifest?.browser_specific_settings?.gecko?.id;
+          if (!id || typeof id !== 'string') throw new Error('Firefox add-on ID is missing');
+          console.log(`Signing ${id} version ${manifest.version}`);
+          NODE
+
+      - name: Mozilla web-ext lint
+        run: npx --yes web-ext@10.5.0 lint --source-dir . --warnings-as-errors
+
+      - name: Sign XPI through addons.mozilla.org
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        shell: bash
+        run: |
+          rm -rf web-ext-artifacts
+          mkdir -p web-ext-artifacts
+          npx --yes web-ext@10.5.0 sign \
+            --source-dir . \
+            --artifacts-dir web-ext-artifacts \
+            --channel=unlisted \
+            --api-key="$AMO_JWT_ISSUER" \
+            --api-secret="$AMO_JWT_SECRET" \
+            --timeout=600000
+
+      - name: Prepare signed release asset
+        id: signed
+        shell: bash
+        run: |
+          signed_xpi="$(find web-ext-artifacts -maxdepth 1 -type f -name '*.xpi' -print -quit)"
+          test -n "$signed_xpi"
+          output="web-ext-artifacts/add_url_to_window_title-3.2.0-signed.xpi"
+          if [ "$signed_xpi" != "$output" ]; then
+            mv "$signed_xpi" "$output"
+          fi
+          sha256sum "$output" > web-ext-artifacts/SHA256SUMS-signed.txt
+          cat web-ext-artifacts/SHA256SUMS-signed.txt
+          echo "xpi=$output" >> "$GITHUB_OUTPUT"
+
+      - name: Attach signed XPI to GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.request.outputs.tag }}
+          SIGNED_XPI: ${{ steps.signed.outputs.xpi }}
+        shell: bash
+        run: |
+          gh release upload "$RELEASE_TAG" \
+            "$SIGNED_XPI" \
+            web-ext-artifacts/SHA256SUMS-signed.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
