@@ -32,6 +32,10 @@ test('extension has no background worker', () => {
   assert.equal(manifest.background, undefined);
 });
 
+test('required website access is declared explicitly', () => {
+  assert.deepEqual(manifest.host_permissions, ['http://*/*', 'https://*/*']);
+});
+
 test('main-world navigation hook and isolated title script both run at document_start', () => {
   assert.equal(manifest.content_scripts.length, 2);
   assert.equal(manifest.content_scripts[0].world, 'MAIN');

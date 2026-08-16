@@ -35,6 +35,7 @@
     "open_in_tab": false
   },
   "permissions": ["storage"],
+  "host_permissions": ["http://*/*", "https://*/*"],
   "browser_specific_settings": {
     "gecko": {
       "id": "add-url-to-window-title@w3b.world",
