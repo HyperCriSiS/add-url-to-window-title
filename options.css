@@ -1,0 +1,98 @@
+:root {
+  color-scheme: light dark;
+  font: menu;
+  --background: Canvas;
+  --foreground: CanvasText;
+  --muted: color-mix(in srgb, CanvasText 68%, transparent);
+  --border: color-mix(in srgb, CanvasText 20%, transparent);
+  --accent: AccentColor;
+  --accent-text: AccentColorText;
+  --success-bg: color-mix(in srgb, #2e8b57 18%, Canvas);
+  --success-border: color-mix(in srgb, #2e8b57 52%, Canvas);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 360px;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+main {
+  width: min(620px, 100%);
+  margin: 0 auto;
+  padding: 18px;
+}
+
+h1 {
+  margin: 0 0 14px;
+  font-size: 1.25rem;
+}
+
+.setting {
+  display: grid;
+  gap: 8px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+
+.setting:first-of-type { border-top: 0; }
+
+.setting-title { font-weight: 600; }
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.help {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+input[type="text"] {
+  width: 100%;
+  max-width: 280px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: Field;
+  color: FieldText;
+}
+
+button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#status {
+  display: none;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--success-border);
+  border-radius: 6px;
+  background: var(--success-bg);
+}
+
+.links {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.links a { color: LinkText; }

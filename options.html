@@ -1,104 +1,50 @@
-<!DOCTYPE html>
-<html>
-  <head>
-  
-    <title>Extension Options</title>
-    
-    <style>
-      #holder {padding: 5px; }
-      #status {display:none;}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Extension Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <h1 id="optionsSectionHeader">Options</h1>
 
-    </style>
-    
-    <link rel="stylesheet" href="bulma.min.css"/>
-    
-  </head>
+    <section class="setting">
+      <div class="setting-title" id="optionsShowFullUrlHeader">How to display URL in Window Title?</div>
+      <label class="checkbox-row" for="showFullUrl">
+        <input type="checkbox" id="showFullUrl">
+        <span id="optionsShowFullUrlText">Show the full URL?</span>
+      </label>
+      <p class="help" id="optionsShowFullUrlHelp">Checked shows the full URL; unchecked shows only the hostname portion.</p>
+    </section>
 
-  <body>
+    <section class="setting">
+      <label class="setting-title" for="separatorString" id="optionsSeparatorStringHeader">Separator String</label>
+      <input id="separatorString" type="text" maxlength="20" placeholder="-" autocomplete="off">
+      <p class="help" id="optionsSeparatorStringHelp">A string to be put between the original title and the URL.</p>
+    </section>
 
-    <nav id="holder" class="panel is-marginless">
-    
-      <p class="panel-heading" id="optionsSectionHeader">
-        Options
-      </p>
+    <section class="setting">
+      <div class="setting-title" id="optionsShowFieldAttributesHeader">Active Field Attribute Display</div>
+      <label class="checkbox-row" for="showFieldAttributes">
+        <input type="checkbox" id="showFieldAttributes">
+        <span id="optionsShowFieldAttributesText">Show the field attributes when a text input field has focus?</span>
+      </label>
+      <p class="help" id="optionsShowFieldAttributesHelp">When enabled, the name and id attributes of input fields are appended while the field has focus.</p>
+    </section>
 
-      <div class="panel-block">
-        <div class="field">
-          <label for="showFullUrl" class="label" id="optionsShowFullUrlHeader">How to display URL in Window Title?</label>
-          <div class="control is-expanded">
-            <div class="is-fullwidth">
-                &nbsp; 
-                <input type="checkbox" id="showFullUrl">
-                <label for="showFullUrl" id="optionsShowFullUrlText">
-                  Show the full URL?
-                </label>
-            </div>            
-            <p class="help" id="optionsShowFullUrlHelp">Checked shows the full URL; Unchecked shows only the hostname portion.</p>
-          </div>
-        </div>
-      </div>
+    <div id="status" role="status" aria-live="polite">
+      <strong id="optionsSavedHeader">Settings Saved</strong>
+      <div id="optionsSavedMessage">Changes are applied to open tabs automatically.</div>
+    </div>
 
-      <div class="panel-block">  
-        <div class="field ">
-          <label for="separatorString" class="label" id="optionsSeparatorStringHeader">Separator String</label>
-          <div class="field has-addons">
-            <p class="control">
-              <input id="separatorString" class="input" type="text" placeholder="-">
-            </p>
-          </div>
-          <p class="help" id="optionsSeparatorStringHelp">A string to be put between the original title and the URL (e.g., 'Title - URL' or 'Title :: URL')</p>
-        </div> 
-      </div>  
+    <button id="optionsSaveButtonText" type="button">Save Settings</button>
 
-      <div class="panel-block">
-        <div class="field">
-          <label for="showFieldAttributes" class="label" id="optionsShowFieldAttributesHeader">Active Field Attribute Display</label>
-          <div class="control is-expanded">
-            <div class="is-fullwidth">
-                &nbsp; 
-                <input type="checkbox" id="showFieldAttributes">
-                <label for="showFieldAttributes" id="optionsShowFieldAttributesText">
-                  Show the field attributes when a text input field has focus?
-                </label>
-            </div>            
-            <p class="help" id="optionsShowFieldAttributesHelp">When this is checked, the 'name' and 'id' attributes of <code>&#x3C;input /&#x3E;</code> fields will be added to the title when they have focus. This is useful if you have a page where the URL is not enough for Keepass to determine the proper auto-type. This is good for two-step logons as well. You simply create an auto-type command specific to the field, then you can determine the auto-type based on the URL and the specific field which currently has fous.</p>
-          </div>
-        </div>
-      </div>
-
-      
-      <div class="panel-block" id="status">    
-        <article  class="message is-success">
-          <div class="message-header" id="optionsSavedHeader">
-            <p>Settings Saved</p>
-          </div>
-          <div class="message-body" id="optionsSavedMessage">
-            You may need to reload/refresh your tabs.
-          </div>
-        </article>  
-      </div>
-     
-     
-      <div class="panel-block">
-        <button id="optionsSaveButtonText" class="button is-link is-outlined is-fullwidth">
-          Save Settings
-        </button>           
-      </div>
-      
-      <div class="panel"></div>
-     
-      <div class="panel">
-        <div class="tabs is-centered has-text-centered is-fullwidth">
-          <ul>
-            <li><a id="optionsDonateLinkText" target="_blank" href="https://github.com/erichgoldman/add-url-to-window-title#donate-and-support">Donate $2.22</a></li>
-            <li><a id="optionsHelpLinkText" target="_blank" href="https://github.com/erichgoldman/add-url-to-window-title/wiki">Help &amp; FAQs</a></li>
-          </ul>
-        </div>      
-      </div>     
-
-    </nav> 
- 
-    <script src="options.js"></script>      
-    
-  </body>
+    <nav class="links" aria-label="Project links">
+      <a id="optionsHelpLinkText" target="_blank" rel="noopener noreferrer" href="https://github.com/HyperCriSiS/add-url-to-window-title">Project &amp; Help</a>
+    </nav>
+  </main>
+  <script src="options.js"></script>
+</body>
 </html>
