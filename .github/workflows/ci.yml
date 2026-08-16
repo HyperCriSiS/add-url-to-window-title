@@ -26,6 +26,7 @@ jobs:
           node --check navigation-hook.js
           node --check managetitle.js
           node --check options.js
+          node --check tests/e2e/chromium.mjs
 
       - name: Unit tests
         run: node --test tests/*.test.js
@@ -61,3 +62,25 @@ jobs:
           path: web-ext-artifacts/*.zip
           archive: false
           if-no-files-found: error
+
+  chromium-e2e:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install pinned Playwright test runtime
+        run: |
+          npm init -y >/dev/null
+          npm install --no-save --package-lock=false playwright@1.62.1
+          npx playwright install --with-deps --no-shell chromium
+
+      - name: Run Chromium extension E2E tests
+        run: node tests/e2e/chromium.mjs
