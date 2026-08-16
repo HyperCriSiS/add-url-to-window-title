@@ -121,3 +121,47 @@ jobs:
           cp "$package" /tmp/add-url-to-window-title.xpi
           "$FIREFOX_PATH" --version
           .venv/bin/python tests/e2e/firefox.py /tmp/add-url-to-window-title.xpi
+
+  waterfox-e2e:
+    needs: validate
+    runs-on: ubuntu-latest
+    env:
+      WATERFOX_VERSION: 6.6.17
+      WATERFOX_SHA512: 580e88f93995e315eb8d514c596b3f55f047451a630ece854ed1a6b9c9d787465ef8bc20475f9f9c36a6b71f1b8fafbd8929fe3b25af433b44ef8e8365fe9c6f
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download validated extension package
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: extension-package
+          path: web-ext-artifacts
+
+      - name: Download and verify Waterfox stable
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="waterfox-${WATERFOX_VERSION}.tar.bz2"
+          url="https://cdn.waterfox.com/waterfox/releases/${WATERFOX_VERSION}/Linux_x86_64/${archive}"
+          curl --fail --location --retry 3 --output "$archive" "$url"
+          echo "${WATERFOX_SHA512}  ${archive}" | sha512sum --check --strict
+          tar -xjf "$archive"
+          ./waterfox/waterfox --version
+
+      - name: Install pinned Selenium runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check selenium==4.46.0
+
+      - name: Run Waterfox temporary-install E2E tests
+        env:
+          FIREFOX_PATH: ${{ github.workspace }}/waterfox/waterfox
+        shell: bash
+        run: |
+          set -euo pipefail
+          package="$(find web-ext-artifacts -maxdepth 1 -name '*.zip' -print -quit)"
+          test -n "$package"
+          cp "$package" /tmp/add-url-to-window-title.xpi
+          "$FIREFOX_PATH" --version
+          .venv/bin/python tests/e2e/firefox.py /tmp/add-url-to-window-title.xpi
