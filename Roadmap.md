@@ -36,7 +36,7 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Give the fork its own Firefox extension ID instead of reusing the upstream signing identity.
 - [x] Explicitly enable Firefox for Android distribution with `gecko_android`.
 - [x] Declare that the extension performs no data collection/transmission using Firefox's built-in manifest consent metadata.
-- [x] Set supported Gecko baselines to Firefox 140 desktop and Firefox 142 Android, matching the manifest data-consent feature.
+- [x] Avoid Firefox `strict_min_version` pinning so compatible Firefox-family forks with independent product versioning (notably Waterfox) are not rejected before runtime compatibility can be tested.
 
 ## P1 — Performance and maintenance
 
@@ -57,14 +57,14 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 
 ## P2 — Validation before release
 
-- [x] Confirm the complete CI workflow passes on GitHub Actions (run #14: validation + Chromium E2E + Firefox E2E).
+- [x] Confirm core validation, package build, Chromium E2E, and Firefox E2E pass on GitHub Actions; Waterfox is tracked separately below.
 - [x] Confirm CI-generated extension package structure passes validation and is reusable across jobs.
-- [x] Test on current Firefox desktop using a temporary installation of the exact CI-built package (Firefox 153.0.4 in run #14).
-- [ ] Test on current Waterfox desktop.
+- [x] Test on current Firefox desktop using a temporary installation of the exact CI-built package.
+- [ ] Test on current Waterfox desktop. Automated Waterfox 6.6.17 temporary installation succeeds, but content-script injection is still being isolated; even a minimal MV3 probe currently does not inject through this WebDriver path.
 - [x] Test on Chromium using a real loaded MV3 extension.
 - [ ] Test on branded Google Chrome separately if required before store publication.
 - [ ] Test on Firefox/Waterfox Android where extension support is enabled.
-- [ ] Reproduce and verify upstream Issue #42 on the live GitHub Issues and X.com sites.
+- [x] Reproduce and verify upstream Issue #42 on the live GitHub Issues and X.com sites using the separate non-gating live-site smoke workflow.
 - [ ] Reproduce and verify upstream Issue #41 on Chase if access is possible.
 - [x] Stress-test mutation-heavy pages and a 40-simultaneous-tab Chromium smoke scenario.
 - [ ] Run an extreme long-lived tab-count test comparable to upstream Issue #38 (~2700 tabs) if practical.
@@ -84,6 +84,8 @@ The CI suite now loads the extension into real browser processes instead of rely
 
 - Chromium: static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, rapid mutation stress, options UI, `storage.sync` live updates, focused input attributes, URL-without-query mode, and 40 simultaneous tabs.
 - Firefox: temporary installation of the exact CI-built package followed by static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, and rapid mutation stress.
+- Live-site smoke: current GitHub Issues and X.com pages, kept separate from release-gating CI because external sites can change independently of the extension.
+- Waterfox: exact CI-built package installation plus a diagnostic matrix that separates product logic, manifest features, MV3 content-script injection, and the WebDriver temporary-install path.
 
 ## Platform limitation: Android System WebView / embedded app views
 
