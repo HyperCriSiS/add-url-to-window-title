@@ -37,6 +37,19 @@
     externalMutationTimes: []
   };
 
+  function capturePageTitle() {
+    const current = core.cleanText(document.title);
+    if (current === state.lastRenderedTitle) {
+      return;
+    }
+
+    state.originalTitle = core.rebaseExternalTitle(
+      current,
+      state.lastRenderedTitle,
+      state.originalTitle
+    );
+  }
+
   function getDisplayedUrl() {
     return core.getDisplayedUrl(location.href, location.hostname, state.options.urlMode);
   }
@@ -52,10 +65,7 @@
 
   function renderTitle({ captureExternalTitle = false } = {}) {
     if (captureExternalTitle) {
-      const current = core.cleanText(document.title);
-      if (current !== state.lastRenderedTitle) {
-        state.originalTitle = current;
-      }
+      capturePageTitle();
     }
 
     const rendered = formatTitle(state.originalTitle);
@@ -101,7 +111,7 @@
       return;
     }
 
-    state.originalTitle = current;
+    capturePageTitle();
     registerExternalTitleChange();
     scheduleRender();
   }

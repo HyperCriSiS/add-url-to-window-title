@@ -47,3 +47,32 @@ test('formatTitle appends field attributes after URL', () => {
     'Login :: example.com/ [Input ID: "user"]'
   );
 });
+
+test('rebaseExternalTitle removes a previous rendered title when a site prepends text', () => {
+  assert.equal(
+    core.rebaseExternalTitle(
+      '(2) Inbox - mail.example/',
+      'Inbox - mail.example/',
+      'Inbox'
+    ),
+    '(2) Inbox'
+  );
+});
+
+test('rebaseExternalTitle removes a previous rendered title when a site appends text', () => {
+  assert.equal(
+    core.rebaseExternalTitle(
+      'Inbox - mail.example/ (2)',
+      'Inbox - mail.example/',
+      'Inbox'
+    ),
+    'Inbox (2)'
+  );
+});
+
+test('rebaseExternalTitle leaves independent site titles unchanged', () => {
+  assert.equal(
+    core.rebaseExternalTitle('New Inbox', 'Inbox - mail.example/', 'Inbox'),
+    'New Inbox'
+  );
+});

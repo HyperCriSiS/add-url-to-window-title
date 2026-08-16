@@ -77,11 +77,30 @@
     return parts.join(' ');
   }
 
+  /**
+   * If a page mutates a title that already contains our rendered value, replace
+   * that rendered value with the previous unmodified page title before we append
+   * the URL again. This prevents suffix duplication on sites that prepend/append
+   * notification counters to the current document.title value.
+   */
+  function rebaseExternalTitle(externalTitle, previousRenderedTitle, previousBaseTitle) {
+    const external = cleanText(externalTitle);
+    const rendered = cleanText(previousRenderedTitle);
+    const base = cleanText(previousBaseTitle);
+
+    if (!rendered || external === rendered || !external.includes(rendered)) {
+      return external;
+    }
+
+    return cleanText(external.replace(rendered, base));
+  }
+
   return Object.freeze({
     URL_MODES,
     cleanText,
     normalizeUrlMode,
     getDisplayedUrl,
-    formatTitle
+    formatTitle,
+    rebaseExternalTitle
   });
 });

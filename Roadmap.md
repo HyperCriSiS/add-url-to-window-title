@@ -24,6 +24,7 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Replace the fragile `head > title` observer with title-node lifecycle tracking.
 - [x] Detect title elements outside `<head>` and title elements created after page start.
 - [x] Handle repeated site-driven title changes without duplicating the URL suffix.
+- [x] Rebase page mutations derived from the previously rendered title before appending the URL again.
 - [x] Add rate limiting/backoff for sites that continuously fight the extension over `document.title`.
 - [x] Track SPA/navigation URL changes through the Navigation API where available.
 - [x] Track `history.pushState()` and `history.replaceState()` without a permanent per-tab polling timer.
@@ -51,10 +52,13 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Remove the obsolete donation link from the options page.
 - [x] Upgrade GitHub Actions to Node-24-based `actions/checkout@v6` and `actions/setup-node@v6`.
 - [x] Add CI syntax, manifest/locale validation, dependency-free Node unit tests, and Mozilla `web-ext` lint.
+- [x] Add a reproducible `web-ext build` configuration that excludes development-only files from packages.
+- [x] Rewrite the README for the maintained fork and document platform limits instead of linking users to obsolete test/store instructions.
 
 ## P2 — Validation before release
 
-- [ ] Confirm the revised CI workflow passes on GitHub Actions.
+- [x] Confirm the revised CI workflow passes on GitHub Actions (run #4, including strict `web-ext` lint).
+- [ ] Confirm CI-generated extension package structure passes validation.
 - [ ] Test on current Firefox desktop.
 - [ ] Test on current Waterfox desktop.
 - [ ] Test on current Chromium/Chrome.
@@ -68,7 +72,7 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 
 - [x] Add a third URL display mode: full URL without query/fragment (upstream Issue #26).
 - [x] Preserve migration compatibility with the legacy `showFullUrl` boolean setting.
-- [x] Add dependency-free unit tests for title cleanup, formatting, URL modes, and manifest invariants.
+- [x] Add dependency-free unit tests for title cleanup, formatting, URL modes, title rebasing, and manifest invariants.
 - [ ] Add optional diagnostics showing why a page cannot be modified (restricted URL, browser UI, unsupported host view).
 - [ ] Replace the legacy Katalon Recorder fixtures with automated real-browser tests for title replacement, title creation, malformed title placement, SPA navigation, and input focus attributes.
 

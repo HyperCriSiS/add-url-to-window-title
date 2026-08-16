@@ -1,77 +1,123 @@
 # Add URL To Window Title
 
-This add-on is designed to add information about the current web page to the browser window's title. The add-on was initially designed to facilitate usage of the KeePass's auto-type feature on logon forms, but can likely be used with other password managers or for other purposes where another application needs to monitor the details about the current page opened in a browser (e.g., web development debugging and pen testing).
+[![Extension validation](https://github.com/HyperCriSiS/add-url-to-window-title/actions/workflows/ci.yml/badge.svg?branch=dev-modernization)](https://github.com/HyperCriSiS/add-url-to-window-title/actions/workflows/ci.yml)
 
+A modernized fork of [erichgoldman/add-url-to-window-title](https://github.com/erichgoldman/add-url-to-window-title). The extension appends the current page address to `document.title`, allowing desktop applications such as password managers and activity trackers to identify the active browser page without direct browser integration.
 
-## Features
+> **Development status:** the modernization work is currently on the `dev-modernization` branch. It is not yet a published replacement for the upstream store versions.
 
-In its most basic usage, this add-on will add the full URL of the current web page running in the active tab of a given browser window. Optionally, the user can configure the addon to only add the hostname. 
-There is also an option which will monitor for when an input or password field is selected and will then add the `id` and `name` attributes, in addition to the full URL or hostname, to the window title. This is to provide further granularity for [auto-type rules](http://keepass.info/help/base/autotype.html), and is useful for many reasons, such as:
-  
-  - Ensure that [you do not start auto-type in a search field which automatically received focus](https://github.com/erichgoldman/add-url-to-window-title/wiki/About---Show-field-attributes-when-a-text-input-field-has-focus#security-note-1) instead of the input field for username or password
+## What this fork changes
 
-  - Helps create distinct auto-type rules for the username/email field versus the password, which is often needed for two-step logons  
+The original extension is useful but several assumptions no longer hold on modern SPAs and frequently mutating websites. This fork focuses on reliability and low overhead:
 
+- robust tracking when `<title>` is replaced, moved, created late, or changed repeatedly;
+- SPA navigation detection without a permanent one-second polling timer in every tab;
+- native Navigation API use where available, with History API fallback where needed;
+- rate limiting when a site continuously overwrites `document.title`;
+- protection against duplicated URL suffixes when a site modifies the already-rendered title;
+- delegated input-focus handling instead of listeners and MutationObservers for every input;
+- three URL modes: hostname, full URL, or full URL without query/fragment;
+- preservation of normal punctuation such as apostrophes;
+- Manifest V3, Firefox Android metadata, and explicit `none` data-collection declaration;
+- no runtime third-party dependencies and no background worker;
+- dependency-free unit tests plus strict Mozilla `web-ext` validation in GitHub Actions.
 
-## Why did I create this extension?
+See [Roadmap.md](Roadmap.md) for the complete migration and validation status.
 
-I am an avid user of [KeePass](http://www.keepass.info/ "KeePass Home Page") for managing my passwords at various website. In order to simplify using my credentials from KeePass, I usually try to use KeePass's [auto-type feature](http://keepass.info/help/base/autotype.html "Explanation of how the Auto-Type feature in KeePass works"). Auto-type depends upon the window's title. For most websites, the title is unique enough to create a matching rule in KeePass. However, some websites simply set the title "Sign In" or similar. In addition, many sites now use two-page or two-step sign-ins, but may not change or update the page's title, further complicating the usage of auto-type.
+## URL display modes
 
-While there are plugins that can integrate KeePass more directly with the browser, from a security standpoint I prefer auto-type because it keeps the browser and KeePass separate. Using a browser plugin to read directly from KeePass may allow browser flaws to be used to compromise KeePass. I also find auto-type to be easier to configure and more portable. 
+Given `https://example.com/account/login?next=/settings#password`, the extension can append:
 
-  
+| Mode | Value |
+| --- | --- |
+| Hostname only | `example.com/` |
+| Full URL | `https://example.com/account/login?next=/settings#password` |
+| Full URL without query/fragment | `https://example.com/account/login` |
 
-## Using this extension directly from source
+A configurable separator is placed between the original title and the URL. Optionally, the `name` and `id` attributes of focused text-like input fields can also be appended for more specific password-manager auto-type rules.
 
-No external libraries are used for this extension and all code is vanilla JavaScript.
+## Browser support for this development branch
 
-To load a local version, follow the docs [to load local extension](https://developer.chrome.com/extensions/faq#faq-dev-01)
+The current manifest targets:
 
-As a regular user, you can install the [Chrome Webstore](https://chrome.google.com/webstore/detail/add-url-to-window-title/ndiaggkadcioihmhghipjmgfeamgjeoi) version if you use Chrome, Edge, Vivaldi, or similar Chromium based browser. This extension also works in Firefox and can be installed from the [Firefox Add-Ons Directory](https://addons.mozilla.org/en-US/firefox/addon/add-url-to-window-title/).
+- Firefox / Gecko desktop 140 or newer;
+- Firefox for Android 142 or newer;
+- Chromium-based browsers 121 or newer.
 
+Waterfox builds based on a sufficiently new Gecko version are expected to use the Firefox path, but real-browser validation remains tracked in the roadmap.
 
+### Android System WebView limitation
 
-## Running the tests
+A WebExtension only runs where the browser injects its content scripts. A third-party Android app's own `android.webkit.WebView` / System WebView is not a Firefox or Chrome tab and does not load browser extensions. This fork therefore cannot force support inside arbitrary app-owned WebViews.
 
-To test that the extension is properly updating the window title value (i.e., the `<title />` field), we use Katalon Recorder to run simulated navigation scenarios and check that values are updated as we expect. To learn more about how to run the tests and how to create your own, visit the [README](/tests/katalon-recorder/README.md) in the `katalon-recorder` tests folder. (2024 Note: These test have not been updated, many of the test pages have changed in the past few years. I am currently doing some small tests, but most functionality has not changed in the core of the extension.)
+It does improve browser-owned inherited-origin documents such as eligible `about:blank`, `about:srcdoc`, `data:` and `blob:` pages where the browser permits content-script injection.
 
-We are exploring migration to selenium web driver and CI via Travis. If you have some experience with this type of testing and would like to help, please open an issue to discuss. 
+## Privacy and permissions
 
+The extension requires only the WebExtension `storage` permission for its settings. It does not declare data collection or transmission. There is no analytics SDK, remote script, runtime framework, background service worker, or network API used by the extension code.
 
-## Contributing
+The content script necessarily reads the current page URL/title because placing that information in the browser window title is the extension's purpose. Settings are stored with the browser's extension storage API.
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+## Development
 
-We are actively looking for contributors to create translations. You can generate a pull request with a new locale and translate [`messages.json`](_locales/en/messages.json) from the "en" locale. You can learn more about the internationalization process for chrome extensions in the [`chrome.i18n documentation`](https://developer.chrome.com/extensions/i18n).
+No `npm install` is required for the extension itself or for its unit tests.
 
+Run the dependency-free tests with Node.js:
 
+```bash
+node --test tests/*.test.js
+```
 
-## Help and Documentation
+Validate JavaScript syntax:
 
-Please visit the [wiki on GitHub](https://github.com/erichgoldman/add-url-to-window-title/wiki) for documentation.
+```bash
+node --check title-core.js
+node --check navigation-hook.js
+node --check managetitle.js
+node --check options.js
+```
 
-If you encounter issues or have general questions about functionality, please open an [issue on GitHub](https://github.com/erichgoldman/add-url-to-window-title/issues/new).
+Mozilla linting uses `web-ext` 10.5.0:
 
-Some documentation may reflect an older version of this extension. We are making efforts to update as needed and record new videos. Should you see a major problem, broken link, please [open an issue](https://github.com/erichgoldman/add-url-to-window-title/issues/new) and we will work to remediate.
+```bash
+npx --yes web-ext@10.5.0 lint --source-dir . --warnings-as-errors
+```
 
+Build the installable ZIP:
 
-## Donate and Support
+```bash
+npx --yes web-ext@10.5.0 build --source-dir . --artifacts-dir web-ext-artifacts --overwrite-dest
+```
 
-Please rate and leave feedback on the [Chrome Webstore](https://chrome.google.com/webstore/), [Firefox Add-Ons Directory](https://addons.mozilla.org/en-US/firefox/addon/add-url-to-window-title/), star it on GitHub, share with your friends, blog about it, etc.
+Development-only files are excluded through `web-ext-config.mjs`.
 
-If you find this extension useful and it saved you some time, please help support development by donating $2.22 USD:
+## Temporary installation
 
-  - [Donate via PayPal](https://www.paypal.com/donate/?hosted_button_id=7JCYGBTV9WRA8)
+### Firefox / Waterfox
 
-No money? Feel free to send a thank you note, drawing, etc. You can also support the continued development of this extension by helping with [translations](#contributing) and [reporting any issues or problems](https://github.com/erichgoldman/add-url-to-window-title/issues/).
+Open `about:debugging`, choose **This Firefox**, select **Load Temporary Add-on**, and choose `manifest.json` from the repository checkout. A built ZIP can also be used where the browser's development workflow permits it.
 
-## Versioning
+### Chromium / Chrome
 
-We use [SemVer](http://semver.org/) for versioning. 
+Open the extensions management page, enable **Developer mode**, choose **Load unpacked**, and select the repository directory.
 
+## Testing priorities
 
+Before a first fork release, manual/real-browser validation is still required for:
 
-## License
+- current Firefox and Waterfox desktop;
+- current Chromium/Chrome;
+- Firefox/Waterfox Android where extension installation is supported;
+- GitHub Issues and X.com, corresponding to upstream issue #42;
+- aggressive title rewriting such as upstream issue #41;
+- mutation-heavy SPAs and high tab counts.
 
-This project is licensed under the GPLv3 License - see the [LICENSE.txt](LICENSE.txt) file for details.
+The automated suite already covers title formatting, legacy-setting migration, URL modes, apostrophe preservation, title rebasing, manifest invariants, locale JSON validity and Mozilla extension linting.
 
+## Upstream and license
+
+Original project and copyright: Eric H. Goldman and upstream contributors.
+
+This fork preserves the project's GPLv3 licensing. See [LICENSE.txt](LICENSE.txt). Changes in this fork remain under GPL-3.0-or-later.
+
+Upstream project: [erichgoldman/add-url-to-window-title](https://github.com/erichgoldman/add-url-to-window-title)
