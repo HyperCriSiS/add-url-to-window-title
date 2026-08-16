@@ -39,9 +39,11 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Remove unsafe/unnecessary `innerHTML` localization writes in favor of `textContent`.
 - [x] Limit separator length and normalize stored values.
 - [x] Remove the obsolete donation link from the options page.
+- [x] Add CI syntax/manifest validation and pin Mozilla `web-ext` lint to 10.5.0.
 
 ## P2 — Validation before release
 
+- [ ] Confirm the new CI workflow passes on GitHub Actions.
 - [ ] Test on current Firefox desktop.
 - [ ] Test on current Waterfox desktop.
 - [ ] Test on current Chromium/Chrome.
@@ -49,13 +51,13 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [ ] Reproduce and verify upstream Issue #42 on GitHub Issues and X.com.
 - [ ] Reproduce and verify upstream Issue #41 on Chase if access is possible.
 - [ ] Stress-test with many tabs and mutation-heavy SPAs.
-- [ ] Validate extension package with Mozilla `web-ext lint` and Chrome extension loading.
+- [ ] Validate temporary installation/package loading in Firefox and Chromium.
 
 ## P3 — Follow-up features
 
 - [ ] Add a third URL display mode: full URL without query/fragment (upstream Issue #26).
 - [ ] Add optional diagnostics showing why a page cannot be modified (restricted URL, browser UI, unsupported host view).
-- [ ] Add automated browser tests for title replacement, title creation, malformed title placement, SPA navigation, and input focus attributes.
+- [ ] Replace the legacy Katalon Recorder fixtures with automated browser tests for title replacement, title creation, malformed title placement, SPA navigation, and input focus attributes.
 
 ## Platform limitation: Android System WebView / embedded app views
 
