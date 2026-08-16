@@ -86,30 +86,6 @@ jobs:
       - name: Run Chromium extension E2E tests
         run: node tests/e2e/chromium.mjs
 
-  chrome-e2e:
-    needs: validate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          package-manager-cache: false
-
-      - name: Install pinned Playwright runtime and Google Chrome Stable
-        run: |
-          npm init -y >/dev/null
-          npm install --no-save --package-lock=false playwright@1.62.1
-          npx playwright install --with-deps chrome
-
-      - name: Run Google Chrome Stable extension E2E tests
-        env:
-          AU2WT_BROWSER_CHANNEL: chrome
-        run: node tests/e2e/chromium.mjs
-
   firefox-e2e:
     needs: validate
     runs-on: ubuntu-latest
@@ -162,8 +138,9 @@ jobs:
           "$FIREFOX_PATH" --version
           .venv/bin/python tests/e2e/firefox.py /tmp/add-url-to-window-title.xpi
 
-  waterfox-e2e:
+  waterfox-diagnostic:
     needs: validate
+    continue-on-error: true
     runs-on: ubuntu-latest
     env:
       WATERFOX_VERSION: 6.6.17
@@ -210,7 +187,7 @@ jobs:
           python3 -m venv .venv
           .venv/bin/python -m pip install --disable-pip-version-check selenium==4.46.0
 
-      - name: Run Waterfox temporary-install E2E tests
+      - name: Run Waterfox temporary-install diagnostic matrix
         env:
           FIREFOX_PATH: ${{ github.workspace }}/waterfox/waterfox
         shell: bash

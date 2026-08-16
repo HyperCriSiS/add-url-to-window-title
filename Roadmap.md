@@ -60,9 +60,9 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Confirm core validation, package build, Chromium E2E, and Firefox E2E pass on GitHub Actions; Waterfox is tracked separately below.
 - [x] Confirm CI-generated extension package structure passes validation and is reusable across jobs.
 - [x] Test on current Firefox desktop using a temporary installation of the exact CI-built package.
-- [ ] Test on current Waterfox desktop. Automated Waterfox 6.6.17 temporary installation succeeds, but content-script injection is still being isolated; even a minimal MV3 probe currently does not inject through this WebDriver path.
+- [ ] Test on current Waterfox desktop outside WebDriver. Automated Waterfox 6.6.17 temporary installation succeeds, but the WebDriver temporary-install path does not inject even a minimal MV3 content script on localhost or public HTTPS, so it is retained only as a non-gating diagnostic and cannot validate product behavior.
 - [x] Test on Chromium using a real loaded MV3 extension.
-- [ ] Test on branded Google Chrome separately if required before store publication.
+- [x] Verify branded Google Chrome automation constraints: Chrome 139+ removed the command-line side-loading flags used by Playwright, so branded Chrome is not a valid automated unpacked-extension gate. Chromium remains the supported automated Chrome-extension E2E target; branded Chrome requires a manually installed/signed extension path if store-specific validation is needed.
 - [ ] Test on Firefox/Waterfox Android where extension support is enabled.
 - [x] Reproduce and verify upstream Issue #42 on the live GitHub Issues and X.com sites using the separate non-gating live-site smoke workflow.
 - [x] Reproduce and verify upstream Issue #41 on the live Chase homepage; the URL remained present in the title across 30 samples over 15 seconds.
@@ -82,10 +82,10 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 
 The CI suite now loads the extension into real browser processes instead of relying only on unit tests:
 
-- Chromium: static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, rapid mutation stress, options UI, `storage.sync` live updates, focused input attributes, URL-without-query mode, and 40 simultaneous tabs.
+- Chromium: static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, rapid mutation stress, options UI, `storage.sync` live updates, focused input attributes, URL-without-query mode, and 40 simultaneous tabs. This is also the supported automated Chrome-extension target because current branded Chrome no longer permits command-line side-loading.
 - Firefox: temporary installation of the exact CI-built package followed by static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, and rapid mutation stress.
 - Live-site smoke: current GitHub Issues, X.com, and Chase pages. Chase is sampled repeatedly for 15 seconds to catch delayed title overwrites; external sites remain separate from release-gating CI because they can change independently of the extension.
-- Waterfox: exact CI-built package installation plus a diagnostic matrix that separates product logic, manifest features, MV3 content-script injection, and the WebDriver temporary-install path.
+- Waterfox: exact CI-built package installation plus a non-gating diagnostic matrix. Waterfox 6.6.17 accepts the temporary add-on but does not inject even a minimal MV3 content script on public HTTPS through this WebDriver path, so this job documents harness behavior rather than claiming product compatibility.
 
 ## Platform limitation: Android System WebView / embedded app views
 
