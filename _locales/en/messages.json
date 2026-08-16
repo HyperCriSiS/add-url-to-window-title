@@ -1,70 +1,56 @@
 {
   "manifestDescription": {
-    "message":"Add full URL or hostname of the current page to the window title. Helps other apps, e.g., KeePass, identify current page."
-    ,"description":"Description in the manifest file"
+    "message": "Adds the current page URL or hostname to the window title so desktop tools such as password managers and activity trackers can identify the active page."
+  },
+  "optionsSectionHeader": {
+    "message": "Extension Options"
+  },
+  "optionsShowFullUrlHeader": {
+    "message": "URL display mode"
+  },
+  "optionsShowFullUrlText": {
+    "message": "Show the full URL?"
+  },
+  "optionsShowFullUrlHelp": {
+    "message": "Choose whether the title contains only the hostname, the complete URL, or the URL without query parameters and fragments."
+  },
+  "optionsUrlModeHostname": {
+    "message": "Hostname only"
+  },
+  "optionsUrlModeFull": {
+    "message": "Full URL"
+  },
+  "optionsUrlModeFullNoQuery": {
+    "message": "Full URL without query or fragment"
+  },
+  "optionsSeparatorStringHeader": {
+    "message": "Separator string"
+  },
+  "optionsSeparatorStringHelp": {
+    "message": "Text placed between the original page title and the URL, for example '-' or '::'."
+  },
+  "optionsShowFieldAttributesHeader": {
+    "message": "Active field attributes"
+  },
+  "optionsShowFieldAttributesText": {
+    "message": "Show field attributes when a text input has focus?"
+  },
+  "optionsShowFieldAttributesHelp": {
+    "message": "When enabled, the name and id attributes of supported text input fields are appended to the title while the field has focus. This can help password-manager auto-type rules distinguish fields on the same page."
+  },
+  "optionsSaveButtonText": {
+    "message": "Save settings"
+  },
+  "optionsSavedHeader": {
+    "message": "Settings saved"
+  },
+  "optionsSavedMessage": {
+    "message": "Changes are applied to open tabs automatically."
+  },
+  "optionsDonateLinkText": {
+    "message": "Donate"
+  },
+  "optionsHelpLinkText": {
+    "message": "Project & Help"
   }
-  
-  ,"optionsSectionHeader": {
-    "message":"Extension Options"
-    ,"description":"In extension options, the main header"
-  }
-  
-  ,"optionsShowFullUrlHeader": {
-    "message":"How to display URL in Window Title?"
-    ,"description":"In extension options, header for showFullUrl setting"
-  }
-  ,"optionsShowFullUrlText": {
-    "message":"Show the full URL?"
-    ,"description":"In extension options, text next to checkbox for showFullUrl setting"
-  }
-  ,"optionsShowFullUrlHelp": {
-    "message":"Checked shows the full URL; Unchecked shows only the hostname portion."
-    ,"description":"In extension options, helper text for showFullUrl setting"
-  }
-
-  ,"optionsSeparatorStringHeader": {
-    "message":"Separator String"
-    ,"description":"In extension options, header for separatorString setting"
-  }
-  ,"optionsSeparatorStringHelp": {
-    "message":"A string to be put between the original title and the URL (e.g., 'Title - URL' or 'Title :: URL')"
-    ,"description":"In extension options, helper text for separatorString setting"
-  }
-
-  
-  ,"optionsShowFieldAttributesHeader": {
-    "message":"Active Field Attribute Display"
-    ,"description":"In extension options, header for showFieldAttributes setting"
-  }
-  ,"optionsShowFieldAttributesText": {
-    "message":"Show the field attributes when a text input field has focus?"
-    ,"description":"In extension options, text next to checkbox for showFieldAttributes setting"
-  }
-  ,"optionsShowFieldAttributesHelp": {
-    "message":"When this is checked, the 'name' and 'id' attributes of <code>&#x3C;input /&#x3E;</code> fields will be added to the title when they have focus. This is useful if you have a page where the URL is not enough for Keepass to determine the proper auto-type. This is good for two-step logons as well. You simply create an auto-type command specific to the field, then you can determine the auto-type based on the URL and the specific field which currently has fous."
-    ,"description":"In extension options, helper text for showFieldAttributes setting"
-  } 
- 
- 
-  ,"optionsSaveButtonText": {
-    "message":"Save Settings"
-    ,"description":"In Options Popup - Text which is shown on the save button"
-  }
-  ,"optionsSavedHeader": {
-    "message":"Settings Saved"
-    ,"description":"In Options Popup - Header for green div that is shown after clicking save button, to confirm saving happened"
-  }  
-  ,"optionsSavedMessage": {
-    "message":"You may need to reload/refresh your tabs."
-    ,"description":"In Options Popup - Text that is shown after clicking save button, to confirm saving happened"
-  }
-  ,"optionsDonateLinkText": {
-    "message":"Donate &dollar;2.22"
-    ,"description":"In Options Popup - Link that leads to donation page"
-  }
-  ,"optionsHelpLinkText": {
-    "message":"Help &amp; FAQs"
-    ,"description":"In Options Popup - Link that leads to help page"
-  }
-  
 }

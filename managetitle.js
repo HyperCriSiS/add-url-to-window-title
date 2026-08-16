@@ -11,11 +11,15 @@
   'use strict';
 
   const extensionApi = globalThis.browser ?? globalThis.chrome;
+  const core = globalThis.AU2WTCore;
   const DEFAULTS = Object.freeze({
+    urlMode: core.URL_MODES.HOSTNAME,
     showFullUrl: false,
     showFieldAttributes: false,
     separatorString: '-'
   });
+  const NAVIGATION_EVENT = 'au2wt:navigation';
+  const EXTERNAL_MUTATION_WINDOW_MS = 2000;
 
   const state = {
     options: { ...DEFAULTS },
@@ -27,89 +31,78 @@
     titleContentObserver: null,
     titleStructureObserver: null,
     noTitleObserver: null,
-    urlPollTimer: null,
-    updateScheduled: false
+    renderTimer: null,
+    pendingCaptureExternalTitle: false,
+    nextAllowedRenderAt: 0,
+    externalMutationTimes: []
   };
 
-  function cleanText(value) {
-    return String(value ?? '')
-      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
-      .trim();
-  }
-
   function getDisplayedUrl() {
-    if (state.options.showFullUrl) {
-      return location.href;
-    }
-
-    return location.hostname ? `${location.hostname}/` : location.href;
+    return core.getDisplayedUrl(location.href, location.hostname, state.options.urlMode);
   }
 
   function formatTitle(baseTitle) {
-    const parts = [cleanText(baseTitle)];
-    const separator = cleanText(state.options.separatorString) || '-';
-    const displayedUrl = cleanText(getDisplayedUrl());
-
-    if (displayedUrl) {
-      parts.push(separator, displayedUrl);
-    }
-
-    if (state.currentInputFieldAttributes) {
-      parts.push(state.currentInputFieldAttributes);
-    }
-
-    return parts.filter(Boolean).join(' ');
-  }
-
-  function stripOwnSuffix(title) {
-    const value = cleanText(title);
-    if (!value || value !== state.lastRenderedTitle) {
-      return value;
-    }
-    return state.originalTitle;
+    return core.formatTitle({
+      baseTitle,
+      displayedUrl: getDisplayedUrl(),
+      separatorString: state.options.separatorString,
+      fieldAttributes: state.currentInputFieldAttributes
+    });
   }
 
   function renderTitle({ captureExternalTitle = false } = {}) {
     if (captureExternalTitle) {
-      const current = cleanText(document.title);
-      if (current && current !== state.lastRenderedTitle) {
+      const current = core.cleanText(document.title);
+      if (current !== state.lastRenderedTitle) {
         state.originalTitle = current;
       }
     }
 
     const rendered = formatTitle(state.originalTitle);
-    if (!rendered || document.title === rendered) {
-      state.lastRenderedTitle = rendered;
-      return;
-    }
-
     state.lastRenderedTitle = rendered;
-    document.title = rendered;
+
+    if (document.title !== rendered) {
+      document.title = rendered;
+    }
   }
 
   function scheduleRender({ captureExternalTitle = false } = {}) {
-    if (state.updateScheduled) {
+    state.pendingCaptureExternalTitle ||= captureExternalTitle;
+    if (state.renderTimer !== null) {
       return;
     }
 
-    state.updateScheduled = true;
-    queueMicrotask(() => {
-      state.updateScheduled = false;
-      renderTitle({ captureExternalTitle });
-    });
+    const delay = Math.max(0, state.nextAllowedRenderAt - performance.now());
+    state.renderTimer = setTimeout(() => {
+      state.renderTimer = null;
+      const shouldCapture = state.pendingCaptureExternalTitle;
+      state.pendingCaptureExternalTitle = false;
+      renderTitle({ captureExternalTitle: shouldCapture });
+    }, delay);
+  }
+
+  function registerExternalTitleChange() {
+    const now = performance.now();
+    state.externalMutationTimes.push(now);
+    state.externalMutationTimes = state.externalMutationTimes.filter(
+      timestamp => now - timestamp <= EXTERNAL_MUTATION_WINDOW_MS
+    );
+
+    const count = state.externalMutationTimes.length;
+    const cooldown = count >= 10 ? 2000 : count >= 5 ? 250 : 0;
+    if (cooldown) {
+      state.nextAllowedRenderAt = Math.max(state.nextAllowedRenderAt, now + cooldown);
+    }
   }
 
   function onTitleMutation() {
-    const current = cleanText(document.title);
-
+    const current = core.cleanText(document.title);
     if (current === state.lastRenderedTitle) {
       return;
     }
 
-    if (current) {
-      state.originalTitle = stripOwnSuffix(current);
-    }
-
+    state.originalTitle = current;
+    registerExternalTitleChange();
     scheduleRender();
   }
 
@@ -192,12 +185,19 @@
     }
 
     state.lastKnownUrl = location.href;
-    scheduleRender();
+    scheduleRender({ captureExternalTitle: true });
   }
 
   function installNavigationTracking() {
+    window.addEventListener(NAVIGATION_EVENT, onUrlMayHaveChanged);
     window.addEventListener('hashchange', onUrlMayHaveChanged, { passive: true });
     window.addEventListener('popstate', onUrlMayHaveChanged, { passive: true });
+    window.addEventListener('focus', onUrlMayHaveChanged, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        onUrlMayHaveChanged();
+      }
+    }, { passive: true });
     window.addEventListener('pageshow', () => {
       attachTitleObservers();
       onUrlMayHaveChanged();
@@ -206,20 +206,24 @@
 
     if (globalThis.navigation?.addEventListener) {
       globalThis.navigation.addEventListener('currententrychange', onUrlMayHaveChanged);
-      return;
     }
-
-    state.urlPollTimer = setInterval(onUrlMayHaveChanged, 1000);
   }
 
   function buildInputAttributes(input) {
-    const name = cleanText(input.getAttribute('name'));
-    const id = cleanText(input.getAttribute('id'));
+    const name = core.cleanText(input.getAttribute('name'));
+    const id = core.cleanText(input.getAttribute('id'));
     return `[Input Name: "${name}"] [Input ID: "${id}"]`;
   }
 
+  function isSupportedInput(target) {
+    if (!(target instanceof HTMLInputElement)) {
+      return false;
+    }
+    return ['text', 'email', 'password', 'search', 'tel', 'url', 'number'].includes(target.type);
+  }
+
   function onFocusIn(event) {
-    if (!state.options.showFieldAttributes || !(event.target instanceof HTMLInputElement)) {
+    if (!state.options.showFieldAttributes || !isSupportedInput(event.target)) {
       return;
     }
 
@@ -228,7 +232,7 @@
   }
 
   function onFocusOut(event) {
-    if (!state.options.showFieldAttributes || !(event.target instanceof HTMLInputElement)) {
+    if (!state.options.showFieldAttributes || !isSupportedInput(event.target)) {
       return;
     }
 
@@ -248,11 +252,13 @@
   async function loadOptions() {
     const previousShowFieldAttributes = state.options.showFieldAttributes;
     const settings = await extensionApi.storage.sync.get(DEFAULTS);
+    const urlMode = core.normalizeUrlMode(settings.urlMode, Boolean(settings.showFullUrl));
 
     state.options = {
-      showFullUrl: Boolean(settings.showFullUrl),
+      urlMode,
+      showFullUrl: urlMode === core.URL_MODES.FULL,
       showFieldAttributes: Boolean(settings.showFieldAttributes),
-      separatorString: cleanText(settings.separatorString) || '-'
+      separatorString: core.cleanText(settings.separatorString).slice(0, 20) || '-'
     };
 
     if (previousShowFieldAttributes && !state.options.showFieldAttributes) {
@@ -265,6 +271,7 @@
   function installStorageTracking() {
     extensionApi.storage.onChanged.addListener((changes, areaName) => {
       if (areaName === 'sync' && (
+        changes.urlMode ||
         changes.showFullUrl ||
         changes.showFieldAttributes ||
         changes.separatorString
@@ -275,7 +282,7 @@
   }
 
   async function init() {
-    state.originalTitle = cleanText(document.title);
+    state.originalTitle = core.cleanText(document.title);
     state.lastKnownUrl = location.href;
 
     attachTitleObservers();

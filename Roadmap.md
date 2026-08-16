@@ -24,26 +24,35 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Replace the fragile `head > title` observer with title-node lifecycle tracking.
 - [x] Detect title elements outside `<head>` and title elements created after page start.
 - [x] Handle repeated site-driven title changes without duplicating the URL suffix.
-- [x] Track SPA/navigation URL changes through Navigation API where available, with `hashchange`, `popstate`, `pageshow`, and a low-cost fallback.
-- [x] Run the content script at `document_start` so late page scripts cannot permanently win the first title update.
+- [x] Add rate limiting/backoff for sites that continuously fight the extension over `document.title`.
+- [x] Track SPA/navigation URL changes through the Navigation API where available.
+- [x] Track `history.pushState()` and `history.replaceState()` without a permanent per-tab polling timer.
+- [x] Keep `hashchange`, `popstate`, `pageshow`, focus, and visibility fallbacks.
+- [x] Run content scripts at `document_start` so late page scripts cannot permanently win the first title update.
 - [x] Enable inherited-origin handling for `about:blank`, `about:srcdoc`, `data:` and `blob:` documents where browser policy permits it.
 - [x] Preserve apostrophes and normal punctuation in page titles; remove only control characters.
 - [x] Remove the unused background service worker, avoiding unnecessary Firefox MV3 incompatibility.
+- [x] Give the fork its own Firefox extension ID instead of reusing the upstream signing identity.
+- [x] Explicitly enable Firefox for Android distribution with `gecko_android`.
+- [x] Declare that the extension performs no data collection/transmission using Firefox's built-in manifest consent metadata.
 
 ## P1 — Performance and maintenance
 
 - [x] Replace per-input listeners plus a whole-body MutationObserver with delegated `focusin` / `focusout` handling.
+- [x] Restrict field-attribute tracking to text-like input types.
+- [x] Remove the 1-second URL polling timer from every Firefox tab.
 - [x] Remove the vendored Bulma runtime dependency (~158 KB) from the options UI.
 - [x] Replace Bulma with a small native CSS file using browser/system colors and dark-mode support.
 - [x] Modernize options code to Promise-based WebExtension storage APIs.
-- [x] Remove unsafe/unnecessary `innerHTML` localization writes in favor of `textContent`.
+- [x] Keep localization writes safe while converting legacy localized markup/entities to plain text.
 - [x] Limit separator length and normalize stored values.
 - [x] Remove the obsolete donation link from the options page.
-- [x] Add CI syntax/manifest validation and pin Mozilla `web-ext` lint to 10.5.0.
+- [x] Upgrade GitHub Actions to Node-24-based `actions/checkout@v6` and `actions/setup-node@v6`.
+- [x] Add CI syntax, manifest/locale validation, dependency-free Node unit tests, and Mozilla `web-ext` lint.
 
 ## P2 — Validation before release
 
-- [ ] Confirm the new CI workflow passes on GitHub Actions.
+- [ ] Confirm the revised CI workflow passes on GitHub Actions.
 - [ ] Test on current Firefox desktop.
 - [ ] Test on current Waterfox desktop.
 - [ ] Test on current Chromium/Chrome.
@@ -55,9 +64,11 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 
 ## P3 — Follow-up features
 
-- [ ] Add a third URL display mode: full URL without query/fragment (upstream Issue #26).
+- [x] Add a third URL display mode: full URL without query/fragment (upstream Issue #26).
+- [x] Preserve migration compatibility with the legacy `showFullUrl` boolean setting.
+- [x] Add dependency-free unit tests for title cleanup, formatting, URL modes, and manifest invariants.
 - [ ] Add optional diagnostics showing why a page cannot be modified (restricted URL, browser UI, unsupported host view).
-- [ ] Replace the legacy Katalon Recorder fixtures with automated browser tests for title replacement, title creation, malformed title placement, SPA navigation, and input focus attributes.
+- [ ] Replace the legacy Katalon Recorder fixtures with automated real-browser tests for title replacement, title creation, malformed title placement, SPA navigation, and input focus attributes.
 
 ## Platform limitation: Android System WebView / embedded app views
 

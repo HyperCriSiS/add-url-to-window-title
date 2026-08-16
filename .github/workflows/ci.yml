@@ -12,20 +12,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
+          package-manager-cache: false
 
       - name: JavaScript syntax
         run: |
+          node --check title-core.js
+          node --check navigation-hook.js
           node --check managetitle.js
           node --check options.js
 
-      - name: Manifest JSON
-        run: node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))"
+      - name: Unit tests
+        run: node --test tests/*.test.js
+
+      - name: Manifest and locale JSON
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))"
+          for file in _locales/*/messages.json; do node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$file"; done
 
       - name: Mozilla web-ext lint
         run: npx --yes web-ext@10.5.0 lint --source-dir . --warnings-as-errors
