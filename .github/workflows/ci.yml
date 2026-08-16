@@ -20,13 +20,14 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
-      - name: JavaScript syntax
+      - name: Source syntax
         run: |
           node --check title-core.js
           node --check navigation-hook.js
           node --check managetitle.js
           node --check options.js
           node --check tests/e2e/chromium.mjs
+          python3 -m py_compile tests/e2e/firefox.py
 
       - name: Unit tests
         run: node --test tests/*.test.js
@@ -59,6 +60,7 @@ jobs:
       - name: Upload validated extension package
         uses: actions/upload-artifact@v7
         with:
+          name: extension-package
           path: web-ext-artifacts/*.zip
           archive: false
           if-no-files-found: error
@@ -84,3 +86,39 @@ jobs:
 
       - name: Run Chromium extension E2E tests
         run: node tests/e2e/chromium.mjs
+
+  firefox-e2e:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install current Firefox
+        id: firefox
+        uses: browser-actions/setup-firefox@v1.7.2
+        with:
+          firefox-version: latest
+
+      - name: Download validated extension package
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: extension-package
+          path: web-ext-artifacts
+
+      - name: Install pinned Selenium runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check selenium==4.46.0
+
+      - name: Run Firefox temporary-install E2E tests
+        env:
+          FIREFOX_PATH: ${{ steps.firefox.outputs.firefox-path }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          package="$(find web-ext-artifacts -maxdepth 1 -name '*.zip' -print -quit)"
+          test -n "$package"
+          cp "$package" /tmp/add-url-to-window-title.xpi
+          "$FIREFOX_PATH" --version
+          .venv/bin/python tests/e2e/firefox.py /tmp/add-url-to-window-title.xpi
