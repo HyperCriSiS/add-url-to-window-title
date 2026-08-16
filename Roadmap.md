@@ -36,7 +36,7 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Give the fork its own Firefox extension ID instead of reusing the upstream signing identity.
 - [x] Explicitly enable Firefox for Android distribution with `gecko_android`.
 - [x] Declare that the extension performs no data collection/transmission using Firefox's built-in manifest consent metadata.
-- [x] Avoid Firefox `strict_min_version` pinning so compatible Firefox-family forks with independent product versioning (notably Waterfox) are not rejected before runtime compatibility can be tested.
+- [x] Use an explicit Gecko minimum of Firefox 128 for the APIs and manifest metadata used by the fork, while keeping Waterfox compatibility as a separate runtime validation target.
 
 ## P1 — Performance and maintenance
 
@@ -75,14 +75,14 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Add a third URL display mode: full URL without query/fragment (upstream Issue #26).
 - [x] Preserve migration compatibility with the legacy `showFullUrl` boolean setting.
 - [x] Add dependency-free unit tests for title cleanup, formatting, URL modes, title rebasing, and manifest invariants.
-- [ ] Add optional diagnostics showing why a page cannot be modified (restricted URL, browser UI, unsupported host view).
+- [x] Add optional diagnostics showing why a page cannot be modified (restricted URL, browser UI, unsupported host view), and verify the real active-tab messaging/UI path in Chromium E2E.
 - [x] Replace the legacy Katalon Recorder fixtures with automated real-browser tests for title replacement, title creation, malformed/moved title placement, SPA navigation, live settings changes, input focus attributes, rapid title mutations, and many-tab behavior.
 
 ## Automated browser coverage
 
 The CI suite now loads the extension into real browser processes instead of relying only on unit tests:
 
-- Chromium: static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, rapid mutation stress, options UI, `storage.sync` live updates, focused input attributes, URL-without-query mode, and 40 simultaneous tabs. This is also the supported automated Chrome-extension target because current branded Chrome no longer permits command-line side-loading.
+- Chromium: static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, rapid mutation stress, options UI, `storage.sync` live updates, focused input attributes, URL-without-query mode, the diagnostics popup through its real active-tab message path, and 40 simultaneous tabs. This is also the supported automated Chrome-extension target because current branded Chrome no longer permits command-line side-loading.
 - Firefox: temporary installation of the exact CI-built package followed by static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, and rapid mutation stress.
 - Live-site smoke: current GitHub Issues, X.com, and Chase pages. Chase is sampled repeatedly for 15 seconds to catch delayed title overwrites; external sites remain separate from release-gating CI because they can change independently of the extension.
 - Waterfox: exact CI-built package installation plus a non-gating diagnostic matrix. Waterfox 6.6.17 accepts the temporary add-on but does not inject even a minimal MV3 content script on public HTTPS through this WebDriver path, so this job documents harness behavior rather than claiming product compatibility.

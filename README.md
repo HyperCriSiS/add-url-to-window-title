@@ -4,7 +4,7 @@
 
 A modernized fork of [erichgoldman/add-url-to-window-title](https://github.com/erichgoldman/add-url-to-window-title). The extension appends the current page address to `document.title`, allowing desktop applications such as password managers and activity trackers to identify the active browser page without direct browser integration.
 
-> **Development status:** the modernization work is currently on the `dev-modernization` branch. It is not yet a published replacement for the upstream store versions.
+> **Development status:** modernization is developed on the `dev-modernization` branch. Beta prereleases are intended for testing and are not yet replacements for the upstream store versions.
 
 ## What this fork changes
 
@@ -40,11 +40,11 @@ A configurable separator is placed between the original title and the URL. Optio
 
 The current manifest targets:
 
-- Firefox / Gecko desktop 140 or newer;
-- Firefox for Android 142 or newer;
+- Firefox / Gecko desktop 128 or newer;
+- Firefox for Android 128 or newer;
 - Chromium-based browsers 121 or newer.
 
-Automated CI currently verifies a real temporary Firefox installation of the built package and a real loaded Chromium MV3 extension. Run #14 passed against Firefox 153.0.4. Waterfox desktop and Android variants still require their own validation before the first fork release.
+Release-gating CI verifies a temporary installation of the exact built package in current Firefox and a real loaded Chromium MV3 extension. Waterfox is tracked separately because its current WebDriver temporary-install path accepts the add-on but does not inject even a minimal content script; direct Waterfox desktop and physical Android validation remain pending before a stable release.
 
 ### Android System WebView limitation
 
@@ -54,9 +54,9 @@ It does improve browser-owned inherited-origin documents such as eligible `about
 
 ## Privacy and permissions
 
-The extension requires only the WebExtension `storage` permission for its settings. It does not declare data collection or transmission. There is no analytics SDK, remote script, runtime framework, background service worker, or network API used by the extension code.
+The extension uses the WebExtension `storage` permission for settings and `activeTab` for the toolbar diagnostics popup. `activeTab` grants temporary access only after the user invokes the browser action; the diagnostics path uses it to ask the already-running content script whether the current page is reachable and whether the extension-managed title is still active. No broad `tabs` or `scripting` permission is requested.
 
-The content script necessarily reads the current page URL/title because placing that information in the browser window title is the extension's purpose. Settings are stored with the browser's extension storage API.
+The extension does not declare data collection or transmission. There is no analytics SDK, remote script, runtime framework, background service worker, or network API used by the extension code. The content script necessarily reads the current page URL/title because placing that information in the browser window title is the extension's purpose. Settings are stored with the browser's extension storage API.
 
 ## Development
 
@@ -105,6 +105,7 @@ The automated browser suite currently covers:
 - options UI and live `storage.sync` updates;
 - focused input field attributes;
 - the URL-without-query/fragment mode;
+- the diagnostics popup through the real active-tab messaging path;
 - a 40-simultaneous-tab Chromium smoke test;
 - temporary installation of the built package in current Firefox.
 
@@ -118,16 +119,16 @@ Open `about:debugging`, choose **This Firefox**, select **Load Temporary Add-on*
 
 Open the extensions management page, enable **Developer mode**, choose **Load unpacked**, and select the repository directory. This loading mode is exercised automatically in Chromium CI.
 
-## Remaining pre-release validation
+## Remaining validation before a stable release
 
-Before a first fork release, the main remaining checks are:
+The first beta prerelease is suitable for broader testing, but the following checks remain before calling the fork stable:
 
-- current Waterfox desktop;
-- Firefox/Waterfox Android where extension installation is supported;
-- live GitHub Issues and X.com behavior corresponding to upstream issue #42;
-- Chase or an equivalent aggressive title-rewriting site corresponding to upstream issue #41;
+- direct testing on current Waterfox desktop outside the WebDriver temporary-install path;
+- physical Firefox/Waterfox Android testing where extension installation is supported;
 - optional branded Google Chrome verification before Chrome Web Store publication;
-- an extreme long-lived/high-tab-count test if we want to approximate upstream issue #38 beyond the existing 40-tab smoke test.
+- an extreme long-lived/high-tab-count test approximating upstream issue #38 (~2700 tabs), beyond the existing 40-tab smoke test.
+
+The GitHub/X regression from upstream issue #42 and the delayed Chase title-overwrite regression from issue #41 have already been reproduced and verified against the modernized implementation.
 
 ## Upstream and license
 
