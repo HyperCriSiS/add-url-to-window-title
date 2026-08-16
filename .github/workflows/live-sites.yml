@@ -1,0 +1,29 @@
+name: Live site regression smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  issue-42-live-sites:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install pinned Playwright runtime
+        run: |
+          npm init -y >/dev/null
+          npm install --no-save --package-lock=false playwright@1.62.1
+          npx playwright install --with-deps --no-shell chromium
+
+      - name: Run upstream issue 42 live-site checks
+        run: node tests/e2e/live-sites.mjs
