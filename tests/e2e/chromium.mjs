@@ -178,6 +178,57 @@ async function saveOptions(context, extensionId, { urlMode, showFieldAttributes 
   }
 }
 
+async function runDiagnosticsSmoke(context, baseUrl, extensionId) {
+  const targetPage = await context.newPage();
+  const diagnosticsPage = await context.newPage();
+
+  try {
+    await targetPage.goto(`${baseUrl}/static`, { waitUntil: 'load' });
+    await waitForTitle(targetPage, `Static Title - ${expectedHost}`);
+
+    await diagnosticsPage.goto(`chrome-extension://${extensionId}/diagnostics.html`, {
+      waitUntil: 'load'
+    });
+
+    // Keep the web page as Chromium's active tab while the diagnostics extension
+    // page reloads in the background. This exercises the same tabs.query() ->
+    // tabs.sendMessage() -> content-script response path used by the action popup.
+    await targetPage.bringToFront();
+
+    const activeUrl = await diagnosticsPage.evaluate(async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      return tab?.url ?? '';
+    });
+    assert.equal(activeUrl, `${baseUrl}/static`);
+
+    await diagnosticsPage.reload({ waitUntil: 'load' });
+    await diagnosticsPage.waitForFunction(() => {
+      const result = document.getElementById('result');
+      return result?.dataset.state && result.dataset.state !== 'loading';
+    });
+
+    assert.equal(await diagnosticsPage.locator('#result').getAttribute('data-state'), 'ok');
+
+    const expectedTitle = await diagnosticsPage.evaluate(
+      () => chrome.i18n.getMessage('diagnosticsReachableTitle')
+    );
+    assert.equal(await diagnosticsPage.locator('#result-title').textContent(), expectedTitle);
+
+    const expectedPageLabel = await diagnosticsPage.evaluate(
+      () => chrome.i18n.getMessage('diagnosticsPageLabel') || 'Page'
+    );
+    assert.equal(
+      await diagnosticsPage.locator('#page').textContent(),
+      `${expectedPageLabel}: ${baseUrl}`
+    );
+
+    console.log('PASS diagnostics popup path: active web tab is reachable and managed');
+  } finally {
+    await diagnosticsPage.close();
+    await targetPage.close();
+  }
+}
+
 const { server, port } = await startServer();
 const userDataDir = await mkdtemp(join(tmpdir(), 'au2wt-playwright-'));
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -214,6 +265,8 @@ try {
 
   const extensionId = await findExtensionId(context);
   console.log(`PASS extension discovery: ${extensionId}`);
+
+  await runDiagnosticsSmoke(context, baseUrl, extensionId);
 
   const liveSettingsPage = await context.newPage();
   try {
