@@ -62,7 +62,6 @@ jobs:
         with:
           name: extension-package
           path: web-ext-artifacts/*.zip
-          archive: false
           if-no-files-found: error
 
   chromium-e2e:
