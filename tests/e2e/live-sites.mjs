@@ -46,11 +46,33 @@ async function waitForTitleToContainCurrentUrl(page, expectedUrl, timeout = 2000
   console.log(`PASS ${expectedUrl}: ${title}`);
 }
 
+async function verifyTitleStaysDecorated(page, durationMs = 15000, intervalMs = 500) {
+  const deadline = Date.now() + durationMs;
+  let samples = 0;
+
+  while (Date.now() < deadline) {
+    const currentUrl = page.url();
+    const title = await page.title();
+    assert.ok(
+      title.includes(currentUrl),
+      `Title lost the current URL after page activity: ${JSON.stringify({ currentUrl, title, samples })}`
+    );
+    samples += 1;
+    await page.waitForTimeout(intervalMs);
+  }
+
+  console.log(`PASS title stability for ${page.url()} across ${samples} samples`);
+}
+
 async function openAndVerify(url) {
   const page = await context.newPage();
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await waitForTitleToContainCurrentUrl(page, url);
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    if (response) {
+      assert.ok(response.status() < 500, `${url} returned HTTP ${response.status()}`);
+    }
+    const finalUrl = page.url();
+    await waitForTitleToContainCurrentUrl(page, finalUrl);
     return page;
   } catch (error) {
     await page.close();
@@ -91,6 +113,16 @@ try {
   await xProfile.close();
   const xStatus = await openAndVerify(xStatusUrl);
   await xStatus.close();
+
+  // Upstream Issue #41: Chase redraws/changes its title after initial load.
+  // Keep sampling the real live page so a delayed overwrite cannot produce a false pass.
+  const chase = await openAndVerify('https://www.chase.com/');
+  try {
+    assert.match(new URL(chase.url()).hostname, /(^|\.)chase\.com$/);
+    await verifyTitleStaysDecorated(chase);
+  } finally {
+    await chase.close();
+  }
 } finally {
   await context?.close();
   await rm(userDataDir, { recursive: true, force: true });
