@@ -131,6 +131,22 @@ async function runCase(context, baseUrl, path, expectedTitle, extraCheck) {
   }
 }
 
+async function runManyTabSmoke(context, baseUrl, count = 40) {
+  const pages = await Promise.all(Array.from({ length: count }, () => context.newPage()));
+  const expected = `Updated - ${baseUrl}/dynamic`;
+
+  try {
+    await Promise.all(
+      pages.map(page => page.goto(`${baseUrl}/dynamic`, { waitUntil: 'load' }))
+    );
+    await Promise.all(pages.map(page => waitForTitle(page, expected, 10000)));
+    assert.ok(pages.every(page => page.url() === `${baseUrl}/dynamic`));
+    console.log(`PASS many-tab smoke: ${count} simultaneous tabs`);
+  } finally {
+    await Promise.all(pages.map(page => page.close()));
+  }
+}
+
 async function findExtensionId(context) {
   const page = await context.newPage();
   try {
@@ -233,6 +249,7 @@ try {
     showFieldAttributes: false
   });
 
+  await runManyTabSmoke(context, baseUrl, 40);
   await runCase(
     context,
     baseUrl,
