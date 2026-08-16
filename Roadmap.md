@@ -66,8 +66,9 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [ ] Test on Firefox/Waterfox Android where extension support is enabled.
 - [x] Reproduce and verify upstream Issue #42 on the live GitHub Issues and X.com sites using the separate non-gating live-site smoke workflow.
 - [x] Reproduce and verify upstream Issue #41 on the live Chase homepage; the URL remained present in the title across 30 samples over 15 seconds.
-- [x] Stress-test mutation-heavy pages and a 40-simultaneous-tab Chromium smoke scenario.
-- [ ] Run an extreme long-lived tab-count test comparable to upstream Issue #38 (~2700 tabs) if practical.
+- [x] Stress-test mutation-heavy pages and a 40-simultaneous-tab Chromium release-gating smoke scenario.
+- [x] Add a separate controlled high-tab workflow and verify 250 and 500 simultaneous loaded tabs against the immutable `v3.2.0-beta.1` release commit (`4af0e329...`).
+- [ ] Run a real long-lived tab-count test comparable to upstream Issue #38 (~2700 tabs). The GitHub runner passes 500 simultaneous loaded tabs; at 750 tabs at least one managed title exceeded the 10-second completion criterion, and at 1000 tabs parallel browser navigation exceeded Playwright's 30-second timeout. Neither failure was an OOM or an extension crash, so the CI harness is not suitable evidence for 2700 long-lived tabs.
 - [x] Validate temporary Firefox package installation and Chromium unpacked loading.
 
 ## P3 — Follow-up features
@@ -82,7 +83,7 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 
 The CI suite now loads the extension into real browser processes instead of relying only on unit tests:
 
-- Chromium: static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, rapid mutation stress, options UI, `storage.sync` live updates, focused input attributes, URL-without-query mode, the diagnostics popup through its real active-tab message path, and 40 simultaneous tabs. This is also the supported automated Chrome-extension target because current branded Chrome no longer permits command-line side-loading.
+- Chromium: static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, rapid mutation stress, options UI, `storage.sync` live updates, focused input attributes, URL-without-query mode, the diagnostics popup through its real active-tab message path, and a 40-tab release gate. A separate stress workflow has additionally passed 250 and 500 simultaneous loaded tabs against the beta release commit; 750/1000 expose runner/browser timeout limits rather than a demonstrated extension crash. Chromium is also the supported automated Chrome-extension target because current branded Chrome no longer permits command-line side-loading.
 - Firefox: temporary installation of the exact CI-built package followed by static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, and rapid mutation stress.
 - Live-site smoke: current GitHub Issues, X.com, and Chase pages. Chase is sampled repeatedly for 15 seconds to catch delayed title overwrites; external sites remain separate from release-gating CI because they can change independently of the extension.
 - Waterfox: exact CI-built package installation plus a non-gating diagnostic matrix. Waterfox 6.6.17 accepts the temporary add-on but does not inject even a minimal MV3 content script on public HTTPS through this WebDriver path, so this job documents harness behavior rather than claiming product compatibility.
