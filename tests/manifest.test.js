@@ -16,15 +16,12 @@ test('Firefox manifest declares no data collection', () => {
   );
 });
 
-test('Firefox Android distribution is explicitly enabled', () => {
-  assert.equal(
-    manifest.browser_specific_settings.gecko_android.strict_min_version,
-    '142.0'
-  );
+test('Firefox Android distribution is explicitly enabled without a product-version gate', () => {
+  assert.deepEqual(manifest.browser_specific_settings.gecko_android, {});
 });
 
-test('Firefox desktop minimum supports data consent metadata', () => {
-  assert.equal(manifest.browser_specific_settings.gecko.strict_min_version, '140.0');
+test('Gecko compatibility is not gated by Firefox product version', () => {
+  assert.equal(manifest.browser_specific_settings.gecko.strict_min_version, undefined);
 });
 
 test('fork uses its own extension ID', () => {
