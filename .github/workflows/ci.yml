@@ -27,7 +27,7 @@ jobs:
           node --check managetitle.js
           node --check options.js
           node --check tests/e2e/chromium.mjs
-          python3 -m py_compile tests/e2e/firefox.py
+          python3 -m py_compile tests/e2e/firefox.py tests/e2e/waterfox-diagnostics.py
 
       - name: Unit tests
         run: node --test tests/*.test.js
@@ -84,6 +84,30 @@ jobs:
           npx playwright install --with-deps --no-shell chromium
 
       - name: Run Chromium extension E2E tests
+        run: node tests/e2e/chromium.mjs
+
+  chrome-e2e:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install pinned Playwright runtime and Google Chrome Stable
+        run: |
+          npm init -y >/dev/null
+          npm install --no-save --package-lock=false playwright@1.62.1
+          npx playwright install --with-deps chrome
+
+      - name: Run Google Chrome Stable extension E2E tests
+        env:
+          AU2WT_BROWSER_CHANNEL: chrome
         run: node tests/e2e/chromium.mjs
 
   firefox-e2e:

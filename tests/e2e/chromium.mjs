@@ -8,6 +8,10 @@ import { chromium } from 'playwright';
 const extensionPath = resolve(process.cwd());
 const extensionName = 'Add URL To Window Title';
 const expectedHost = '127.0.0.1/';
+const browserChannel = process.env.AU2WT_BROWSER_CHANNEL || 'chromium';
+const manyTabCount = Number.parseInt(process.env.AU2WT_TAB_COUNT || '40', 10);
+
+assert.ok(Number.isInteger(manyTabCount) && manyTabCount > 0, 'AU2WT_TAB_COUNT must be a positive integer');
 
 const fixtures = new Map([
   ['/static', `<!doctype html>
@@ -180,8 +184,9 @@ const baseUrl = `http://127.0.0.1:${port}`;
 let context;
 
 try {
+  console.log(`Running browser E2E with channel=${browserChannel} tabs=${manyTabCount}`);
   context = await chromium.launchPersistentContext(userDataDir, {
-    channel: 'chromium',
+    channel: browserChannel,
     headless: true,
     args: [
       `--disable-extensions-except=${extensionPath}`,
@@ -249,7 +254,7 @@ try {
     showFieldAttributes: false
   });
 
-  await runManyTabSmoke(context, baseUrl, 40);
+  await runManyTabSmoke(context, baseUrl, manyTabCount);
   await runCase(
     context,
     baseUrl,
