@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path';
 import { chromium } from 'playwright';
 
 const extensionPath = resolve(process.cwd());
+const extensionName = 'Add URL To Window Title';
 const expectedHost = '127.0.0.1/';
 
 const fixtures = new Map([
@@ -70,7 +71,14 @@ const fixtures = new Map([
         document.title = 'Stress ' + i;
         if (i === 30) clearInterval(timer);
       }, 20);
-    </script></body></html>`]
+    </script></body></html>`],
+
+  ['/input', `<!doctype html>
+    <html><head><meta charset="utf-8"><title>Login</title></head>
+    <body>
+      <label>User <input id="user" name="username" type="text"></label>
+      <button id="outside" type="button">Outside</button>
+    </body></html>`]
 ]);
 
 function startServer() {
@@ -123,6 +131,33 @@ async function runCase(context, baseUrl, path, expectedTitle, extraCheck) {
   }
 }
 
+async function findExtensionId(context) {
+  const page = await context.newPage();
+  try {
+    await page.goto('chrome://extensions/');
+    const item = page.locator('extensions-item').filter({ hasText: extensionName }).first();
+    await item.waitFor({ state: 'attached', timeout: 5000 });
+    const extensionId = await item.getAttribute('id');
+    assert.match(extensionId ?? '', /^[a-p]{32}$/);
+    return extensionId;
+  } finally {
+    await page.close();
+  }
+}
+
+async function saveOptions(context, extensionId, { urlMode, showFieldAttributes }) {
+  const page = await context.newPage();
+  try {
+    await page.goto(`chrome-extension://${extensionId}/options.html`);
+    await page.locator('#urlMode').selectOption(urlMode);
+    await page.locator('#showFieldAttributes').setChecked(showFieldAttributes);
+    await page.locator('#optionsSaveButtonText').click();
+    await page.locator('#status').waitFor({ state: 'visible' });
+  } finally {
+    await page.close();
+  }
+}
+
 const { server, port } = await startServer();
 const userDataDir = await mkdtemp(join(tmpdir(), 'au2wt-playwright-'));
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -155,6 +190,60 @@ try {
     const title = await page.title();
     assert.equal(title.split(expectedHost).length - 1, 1, 'URL suffix must occur exactly once');
   });
+
+  const extensionId = await findExtensionId(context);
+  console.log(`PASS extension discovery: ${extensionId}`);
+
+  const liveSettingsPage = await context.newPage();
+  try {
+    await liveSettingsPage.goto(`${baseUrl}/static`, { waitUntil: 'load' });
+    await waitForTitle(liveSettingsPage, `Static Title - ${expectedHost}`);
+
+    await saveOptions(context, extensionId, {
+      urlMode: 'full',
+      showFieldAttributes: true
+    });
+
+    await waitForTitle(liveSettingsPage, `Static Title - ${baseUrl}/static`);
+    console.log(`PASS live settings update: ${await liveSettingsPage.title()}`);
+  } finally {
+    await liveSettingsPage.close();
+  }
+
+  const inputPage = await context.newPage();
+  try {
+    await inputPage.goto(`${baseUrl}/input`, { waitUntil: 'load' });
+    await waitForTitle(inputPage, `Login - ${baseUrl}/input`);
+
+    await inputPage.locator('#user').focus();
+    await waitForTitle(
+      inputPage,
+      `Login - ${baseUrl}/input [Input Name: "username"] [Input ID: "user"]`
+    );
+
+    await inputPage.locator('#outside').focus();
+    await waitForTitle(inputPage, `Login - ${baseUrl}/input`);
+    console.log('PASS input focus attributes and blur cleanup');
+  } finally {
+    await inputPage.close();
+  }
+
+  await saveOptions(context, extensionId, {
+    urlMode: 'fullNoQuery',
+    showFieldAttributes: false
+  });
+
+  await runCase(
+    context,
+    baseUrl,
+    '/spa',
+    `SPA Next - ${baseUrl}/spa-next`,
+    async page => {
+      assert.match(page.url(), /\/spa-next\?source=test#result$/);
+      assert.ok(!(await page.title()).includes('source=test'));
+      assert.ok(!(await page.title()).includes('#result'));
+    }
+  );
 } finally {
   await context?.close();
   await new Promise(resolveClose => server.close(resolveClose));
