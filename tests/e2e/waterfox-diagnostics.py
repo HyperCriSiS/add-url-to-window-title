@@ -137,11 +137,20 @@ def run_probe(extension_path, url, expected_title, label):
         service=Service(executable_path=geckodriver_path)
     )
     try:
-        addon_id = driver.install_addon(str(extension_path), temporary=True)
+        try:
+            addon_id = driver.install_addon(str(extension_path), temporary=True)
+        except Exception as error:
+            print(f"DIAGNOSTIC INSTALL FAIL {label}: {error}", flush=True)
+            return False
+
         driver.get(url)
         try:
-            WebDriverWait(driver, 5).until(lambda current: current.title == expected_title)
-            print(f"DIAGNOSTIC PASS {label}: addon={addon_id} title={driver.title!r}", flush=True)
+            WebDriverWait(driver, 8).until(lambda current: current.title == expected_title)
+            print(
+                f"DIAGNOSTIC PASS {label}: addon={addon_id} title={driver.title!r} "
+                f"url={driver.current_url!r}",
+                flush=True,
+            )
             return True
         except Exception:
             print(
@@ -168,11 +177,11 @@ def main():
 
         no_main = temp / "no-main-world.xpi"
         write_variant(source, no_main, drop_main_world)
-        run_probe(no_main, url, "Static Title - 127.0.0.1/", "without MAIN-world navigation hook")
+        run_probe(no_main, url, "Static Title - 127.0.0.1/", "product logic without MAIN-world navigation hook on localhost")
 
         basic_matching = temp / "basic-matching.xpi"
         write_variant(source, basic_matching, drop_advanced_matching)
-        run_probe(basic_matching, url, "Static Title - 127.0.0.1/", "without MAIN world or advanced match flags")
+        run_probe(basic_matching, url, "Static Title - 127.0.0.1/", "product logic without advanced match flags on localhost")
 
         probe = temp / "minimal-probe.xpi"
         write_variant(
@@ -181,7 +190,8 @@ def main():
             minimal_probe,
             {"waterfox-probe.js": "document.title = 'Waterfox Probe';\n"},
         )
-        run_probe(probe, url, "Waterfox Probe", "minimal MV3 content script")
+        run_probe(probe, url, "Waterfox Probe", "minimal MV3 content script on localhost")
+        run_probe(probe, "https://example.com/", "Waterfox Probe", "minimal MV3 content script on public HTTPS")
 
         mv2_probe = temp / "minimal-mv2-probe.xpi"
         write_variant(
@@ -190,7 +200,7 @@ def main():
             minimal_mv2_probe,
             {"waterfox-probe.js": "document.title = 'Waterfox MV2 Probe';\n"},
         )
-        run_probe(mv2_probe, url, "Waterfox MV2 Probe", "minimal MV2 content script")
+        run_probe(mv2_probe, url, "Waterfox MV2 Probe", "minimal MV2 content script on localhost")
 
 
 if __name__ == "__main__":
