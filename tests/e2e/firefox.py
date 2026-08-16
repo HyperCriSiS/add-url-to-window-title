@@ -3,12 +3,14 @@ import contextlib
 import http.server
 import os
 import pathlib
+import shutil
 import socketserver
 import sys
 import threading
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 
 FIXTURES = {
@@ -84,8 +86,15 @@ def main():
     if firefox_path:
         options.binary_location = firefox_path
 
+    geckodriver_path = os.environ.get("GECKODRIVER_PATH") or shutil.which("geckodriver")
+    if not geckodriver_path:
+        raise SystemExit("geckodriver was not found in PATH")
+
+    print(f"Using geckodriver: {geckodriver_path}", flush=True)
+    service = Service(executable_path=geckodriver_path)
+
     with local_server() as base_url:
-        driver = webdriver.Firefox(options=options)
+        driver = webdriver.Firefox(options=options, service=service)
         try:
             addon_id = driver.install_addon(str(extension_path), temporary=True)
             assert addon_id == "add-url-to-window-title@w3b.world", addon_id
