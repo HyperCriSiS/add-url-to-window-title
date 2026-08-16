@@ -2,6 +2,12 @@ name: Live site regression smoke
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - dev-modernization
+    paths:
+      - .github/workflows/live-sites.yml
+      - tests/e2e/live-sites.mjs
 
 permissions:
   contents: read
