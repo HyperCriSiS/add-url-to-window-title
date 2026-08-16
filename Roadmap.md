@@ -57,16 +57,18 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 
 ## P2 — Validation before release
 
-- [x] Confirm the revised CI workflow passes on GitHub Actions (run #4, including strict `web-ext` lint).
-- [ ] Confirm CI-generated extension package structure passes validation.
-- [ ] Test on current Firefox desktop.
+- [x] Confirm the complete CI workflow passes on GitHub Actions (run #14: validation + Chromium E2E + Firefox E2E).
+- [x] Confirm CI-generated extension package structure passes validation and is reusable across jobs.
+- [x] Test on current Firefox desktop using a temporary installation of the exact CI-built package (Firefox 153.0.4 in run #14).
 - [ ] Test on current Waterfox desktop.
-- [ ] Test on current Chromium/Chrome.
+- [x] Test on Chromium using a real loaded MV3 extension.
+- [ ] Test on branded Google Chrome separately if required before store publication.
 - [ ] Test on Firefox/Waterfox Android where extension support is enabled.
-- [ ] Reproduce and verify upstream Issue #42 on GitHub Issues and X.com.
+- [ ] Reproduce and verify upstream Issue #42 on the live GitHub Issues and X.com sites.
 - [ ] Reproduce and verify upstream Issue #41 on Chase if access is possible.
-- [ ] Stress-test with many tabs and mutation-heavy SPAs.
-- [ ] Validate temporary installation/package loading in Firefox and Chromium.
+- [x] Stress-test mutation-heavy pages and a 40-simultaneous-tab Chromium smoke scenario.
+- [ ] Run an extreme long-lived tab-count test comparable to upstream Issue #38 (~2700 tabs) if practical.
+- [x] Validate temporary Firefox package installation and Chromium unpacked loading.
 
 ## P3 — Follow-up features
 
@@ -74,7 +76,14 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Preserve migration compatibility with the legacy `showFullUrl` boolean setting.
 - [x] Add dependency-free unit tests for title cleanup, formatting, URL modes, title rebasing, and manifest invariants.
 - [ ] Add optional diagnostics showing why a page cannot be modified (restricted URL, browser UI, unsupported host view).
-- [ ] Replace the legacy Katalon Recorder fixtures with automated real-browser tests for title replacement, title creation, malformed title placement, SPA navigation, and input focus attributes.
+- [x] Replace the legacy Katalon Recorder fixtures with automated real-browser tests for title replacement, title creation, malformed/moved title placement, SPA navigation, live settings changes, input focus attributes, rapid title mutations, and many-tab behavior.
+
+## Automated browser coverage
+
+The CI suite now loads the extension into real browser processes instead of relying only on unit tests:
+
+- Chromium: static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, rapid mutation stress, options UI, `storage.sync` live updates, focused input attributes, URL-without-query mode, and 40 simultaneous tabs.
+- Firefox: temporary installation of the exact CI-built package followed by static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, and rapid mutation stress.
 
 ## Platform limitation: Android System WebView / embedded app views
 

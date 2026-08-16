@@ -20,7 +20,7 @@ The original extension is useful but several assumptions no longer hold on moder
 - preservation of normal punctuation such as apostrophes;
 - Manifest V3, Firefox Android metadata, and explicit `none` data-collection declaration;
 - no runtime third-party dependencies and no background worker;
-- dependency-free unit tests plus strict Mozilla `web-ext` validation in GitHub Actions.
+- dependency-free unit tests, strict Mozilla `web-ext` validation, package validation, and real Chromium/Firefox extension E2E tests in GitHub Actions.
 
 See [Roadmap.md](Roadmap.md) for the complete migration and validation status.
 
@@ -44,7 +44,7 @@ The current manifest targets:
 - Firefox for Android 142 or newer;
 - Chromium-based browsers 121 or newer.
 
-Waterfox builds based on a sufficiently new Gecko version are expected to use the Firefox path, but real-browser validation remains tracked in the roadmap.
+Automated CI currently verifies a real temporary Firefox installation of the built package and a real loaded Chromium MV3 extension. Run #14 passed against Firefox 153.0.4. Waterfox desktop and Android variants still require their own validation before the first fork release.
 
 ### Android System WebView limitation
 
@@ -91,28 +91,43 @@ npx --yes web-ext@10.5.0 build --source-dir . --artifacts-dir web-ext-artifacts 
 
 Development-only files are excluded through `web-ext-config.mjs`.
 
+## Automated browser testing
+
+GitHub Actions builds one validated extension package and reuses that package for Firefox testing. Chromium loads the repository as an unpacked MV3 extension.
+
+The automated browser suite currently covers:
+
+- static and dynamically rewritten titles;
+- SPA `pushState` navigation;
+- `<title>` elements created late, replaced, or moved;
+- pages that derive a new title from the extension-modified title;
+- rapid repeated title mutations without duplicate URL suffixes;
+- options UI and live `storage.sync` updates;
+- focused input field attributes;
+- the URL-without-query/fragment mode;
+- a 40-simultaneous-tab Chromium smoke test;
+- temporary installation of the built package in current Firefox.
+
 ## Temporary installation
 
 ### Firefox / Waterfox
 
-Open `about:debugging`, choose **This Firefox**, select **Load Temporary Add-on**, and choose `manifest.json` from the repository checkout. A built ZIP can also be used where the browser's development workflow permits it.
+Open `about:debugging`, choose **This Firefox**, select **Load Temporary Add-on**, and choose `manifest.json` from the repository checkout. The CI suite additionally verifies temporary installation of the built package through Firefox WebDriver.
 
 ### Chromium / Chrome
 
-Open the extensions management page, enable **Developer mode**, choose **Load unpacked**, and select the repository directory.
+Open the extensions management page, enable **Developer mode**, choose **Load unpacked**, and select the repository directory. This loading mode is exercised automatically in Chromium CI.
 
-## Testing priorities
+## Remaining pre-release validation
 
-Before a first fork release, manual/real-browser validation is still required for:
+Before a first fork release, the main remaining checks are:
 
-- current Firefox and Waterfox desktop;
-- current Chromium/Chrome;
+- current Waterfox desktop;
 - Firefox/Waterfox Android where extension installation is supported;
-- GitHub Issues and X.com, corresponding to upstream issue #42;
-- aggressive title rewriting such as upstream issue #41;
-- mutation-heavy SPAs and high tab counts.
-
-The automated suite already covers title formatting, legacy-setting migration, URL modes, apostrophe preservation, title rebasing, manifest invariants, locale JSON validity and Mozilla extension linting.
+- live GitHub Issues and X.com behavior corresponding to upstream issue #42;
+- Chase or an equivalent aggressive title-rewriting site corresponding to upstream issue #41;
+- optional branded Google Chrome verification before Chrome Web Store publication;
+- an extreme long-lived/high-tab-count test if we want to approximate upstream issue #38 beyond the existing 40-tab smoke test.
 
 ## Upstream and license
 
