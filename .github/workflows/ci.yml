@@ -2,6 +2,8 @@ name: Extension validation
 
 on:
   push:
+    paths-ignore:
+      - '.stress/**'
   pull_request:
 
 permissions:
