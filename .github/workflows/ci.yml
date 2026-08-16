@@ -196,4 +196,12 @@ jobs:
           test -n "$package"
           cp "$package" /tmp/add-url-to-window-title.xpi
           "$FIREFOX_PATH" --version
+          set +e
           .venv/bin/python tests/e2e/firefox.py /tmp/add-url-to-window-title.xpi
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            echo "Waterfox product E2E failed; running diagnostic content-script matrix." >&2
+            .venv/bin/python tests/e2e/waterfox-diagnostics.py /tmp/add-url-to-window-title.xpi
+            exit "$status"
+          fi
