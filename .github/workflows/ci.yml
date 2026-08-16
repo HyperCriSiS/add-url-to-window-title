@@ -50,7 +50,14 @@ jobs:
           echo "Package: $package"
           unzip -l "$package"
           unzip -p "$package" manifest.json | node -e "let d=''; process.stdin.on('data', c => d += c).on('end', () => JSON.parse(d));"
-          if unzip -Z1 "$package" | grep -E '^(tests/|README\.md$|Roadmap\.md$|CONTRIBUTING\.md$|web-ext-config\.mjs$|\.github/)'; then
+          if unzip -Z1 "$package" | grep -E '^(tests/?|README\.md$|Roadmap\.md$|CONTRIBUTING\.md$|web-ext-config\.mjs$|\.github/)'; then
             echo 'Development-only files leaked into the extension package.' >&2
             exit 1
           fi
+
+      - name: Upload validated extension package
+        uses: actions/upload-artifact@v7
+        with:
+          path: web-ext-artifacts/*.zip
+          archive: false
+          if-no-files-found: error

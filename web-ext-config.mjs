@@ -1,6 +1,6 @@
 export default {
   ignoreFiles: [
-    'tests/**',
+    'tests',
     'README.md',
     'Roadmap.md',
     'CONTRIBUTING.md',
