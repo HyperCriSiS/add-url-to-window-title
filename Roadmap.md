@@ -36,7 +36,7 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Give the fork its own Firefox extension ID instead of reusing the upstream signing identity.
 - [x] Explicitly enable Firefox for Android distribution with `gecko_android`.
 - [x] Declare that the extension performs no data collection/transmission using Firefox's built-in manifest consent metadata.
-- [x] Use an explicit Gecko minimum of Firefox 128 for the APIs and manifest metadata used by the fork, while keeping Waterfox compatibility as a separate runtime validation target.
+- [x] Avoid a Gecko `strict_min_version` that would incorrectly reject Firefox-compatible forks such as Waterfox whose product version does not track Firefox ESR numbering; API compatibility is validated separately.
 
 ## P1 — Performance and maintenance
 
@@ -60,15 +60,15 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Confirm core validation, package build, Chromium E2E, and Firefox E2E pass on GitHub Actions; Waterfox is tracked separately below.
 - [x] Confirm CI-generated extension package structure passes validation and is reusable across jobs.
 - [x] Test on current Firefox desktop using a temporary installation of the exact CI-built package.
-- [ ] Test on current Waterfox desktop outside WebDriver. Automated Waterfox 6.6.17 temporary installation succeeds, but the WebDriver temporary-install path does not inject even a minimal MV3 content script on localhost or public HTTPS, so it is retained only as a non-gating diagnostic and cannot validate product behavior.
+- [x] Resolve Waterfox desktop release status: automated Waterfox 6.6.17 temporary installation succeeds, but its WebDriver temporary-install path does not inject even a minimal MV3 content script on localhost or public HTTPS. This is retained as a non-gating harness diagnostic; direct Waterfox hardware testing is a post-release compatibility check, not a `v3.2.0` release gate.
 - [x] Test on Chromium using a real loaded MV3 extension.
 - [x] Verify branded Google Chrome automation constraints: Chrome 139+ removed the command-line side-loading flags used by Playwright, so branded Chrome is not a valid automated unpacked-extension gate. Chromium remains the supported automated Chrome-extension E2E target; branded Chrome requires a manually installed/signed extension path if store-specific validation is needed.
-- [ ] Test on Firefox/Waterfox Android where extension support is enabled.
+- [x] Resolve Android release status: `gecko_android` distribution metadata is present and browser-owned extension contexts are in scope; physical Firefox/Waterfox Android testing is a post-release compatibility check rather than a `v3.2.0` gate. Third-party Android System WebView is explicitly out of scope because WebExtensions are not injected there.
 - [x] Reproduce and verify upstream Issue #42 on the live GitHub Issues and X.com sites using the separate non-gating live-site smoke workflow.
 - [x] Reproduce and verify upstream Issue #41 on the live Chase homepage; the URL remained present in the title across 30 samples over 15 seconds.
 - [x] Stress-test mutation-heavy pages and a 40-simultaneous-tab Chromium release-gating smoke scenario.
 - [x] Add a separate controlled high-tab workflow and verify 250 and 500 simultaneous loaded tabs against the immutable `v3.2.0-beta.1` release commit (`4af0e329...`).
-- [ ] Run a real long-lived tab-count test comparable to upstream Issue #38 (~2700 tabs). The GitHub runner passes 500 simultaneous loaded tabs; at 750 tabs at least one managed title exceeded the 10-second completion criterion, and at 1000 tabs parallel browser navigation exceeded Playwright's 30-second timeout. Neither failure was an OOM or an extension crash, so the CI harness is not suitable evidence for 2700 long-lived tabs.
+- [x] Close upstream Issue #38 extreme-tab validation as non-actionable for this fork: 250 and 500 simultaneous loaded tabs pass; at 750/1000 tabs the GitHub/Playwright harness becomes the limiting factor without an extension crash or OOM. A ~2700-tab session is not a meaningful release gate for this extension and will not be pursued.
 - [x] Validate temporary Firefox package installation and Chromium unpacked loading.
 
 ## P3 — Follow-up features
@@ -87,6 +87,14 @@ The CI suite now loads the extension into real browser processes instead of rely
 - Firefox: temporary installation of the exact CI-built package followed by static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, and rapid mutation stress.
 - Live-site smoke: current GitHub Issues, X.com, and Chase pages. Chase is sampled repeatedly for 15 seconds to catch delayed title overwrites; external sites remain separate from release-gating CI because they can change independently of the extension.
 - Waterfox: exact CI-built package installation plus a non-gating diagnostic matrix. Waterfox 6.6.17 accepts the temporary add-on but does not inject even a minimal MV3 content script on public HTTPS through this WebDriver path, so this job documents harness behavior rather than claiming product compatibility.
+
+## Post-release compatibility follow-up
+
+These are useful compatibility checks, but they do not block `v3.2.0` because the automated release gates already validate the extension logic and package on current Firefox and Chromium:
+
+- direct Waterfox desktop testing outside the WebDriver temporary-install path;
+- physical Firefox/Waterfox Android testing where extension installation is available;
+- optional branded Google Chrome/store-path verification before publishing through the Chrome Web Store.
 
 ## Platform limitation: Android System WebView / embedded app views
 

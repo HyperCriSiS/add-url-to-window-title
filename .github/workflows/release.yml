@@ -1,0 +1,111 @@
+name: Stable release publisher
+
+on:
+  push:
+    branches:
+      - dev-modernization
+    paths:
+      - .release/release.json
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release request
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Read release request
+        id: request
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const cfg = JSON.parse(fs.readFileSync('.release/release.json', 'utf8'));
+          if (!/^v\d+\.\d+\.\d+$/.test(cfg.tag ?? '')) throw new Error('Invalid stable release tag');
+          if (!/^[0-9a-f]{40}$/.test(cfg.target_sha ?? '')) throw new Error('target_sha must be a full commit SHA');
+          if (typeof cfg.title !== 'string' || !cfg.title.trim()) throw new Error('title is required');
+          if (typeof cfg.notes_file !== 'string' || !cfg.notes_file.startsWith('release-notes/')) throw new Error('notes_file must be under release-notes/');
+          if (!fs.existsSync(cfg.notes_file)) throw new Error(`Missing notes file: ${cfg.notes_file}`);
+          fs.copyFileSync(cfg.notes_file, '/tmp/release-notes.md');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag=${cfg.tag}\ntarget_sha=${cfg.target_sha}\ntitle=${cfg.title}\n`);
+          NODE
+
+      - name: Checkout immutable release target
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.request.outputs.target_sha }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Verify target and version
+        env:
+          RELEASE_TAG: ${{ steps.request.outputs.tag }}
+          TARGET_SHA: ${{ steps.request.outputs.target_sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$TARGET_SHA"
+          node <<'NODE'
+          const fs = require('node:fs');
+          const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+          const expected = `v${manifest.version}`;
+          if (process.env.RELEASE_TAG !== expected) {
+            throw new Error(`Tag ${process.env.RELEASE_TAG} does not match manifest version ${manifest.version}`);
+          }
+          NODE
+
+      - name: Validate JavaScript and manifest
+        run: |
+          node --check title-core.js
+          node --check navigation-hook.js
+          node --check managetitle.js
+          node --check diagnostics-core.js
+          node --check diagnostics-content.js
+          node --check diagnostics.js
+          node --check options.js
+          python -m json.tool manifest.json > /dev/null
+
+      - name: Unit tests
+        run: node --test tests/*.test.js
+
+      - name: Mozilla web-ext lint
+        run: npx --yes web-ext@10.5.0 lint --source-dir . --warnings-as-errors
+
+      - name: Build release package
+        run: |
+          rm -rf web-ext-artifacts
+          npx --yes web-ext@10.5.0 build --source-dir . --artifacts-dir web-ext-artifacts --overwrite-dest
+          sha256sum web-ext-artifacts/*.zip > web-ext-artifacts/SHA256SUMS.txt
+          cat web-ext-artifacts/SHA256SUMS.txt
+
+      - name: Ensure release does not already exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.request.outputs.tag }}
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists" >&2
+            exit 1
+          fi
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.request.outputs.tag }}
+          RELEASE_TITLE: ${{ steps.request.outputs.title }}
+          TARGET_SHA: ${{ steps.request.outputs.target_sha }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            web-ext-artifacts/*.zip \
+            web-ext-artifacts/SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_SHA" \
+            --title "$RELEASE_TITLE" \
+            --notes-file /tmp/release-notes.md

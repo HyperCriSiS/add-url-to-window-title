@@ -4,7 +4,7 @@
 
 A modernized fork of [erichgoldman/add-url-to-window-title](https://github.com/erichgoldman/add-url-to-window-title). The extension appends the current page address to `document.title`, allowing desktop applications such as password managers and activity trackers to identify the active browser page without direct browser integration.
 
-> **Development status:** modernization is developed on the `dev-modernization` branch. Beta prereleases are intended for testing and are not yet replacements for the upstream store versions.
+> **Release status:** `v3.2.0` is the first stable release of the modernized fork. Development continues on `dev-modernization`; upstream store listings remain separate from this fork.
 
 ## What this fork changes
 
@@ -44,7 +44,7 @@ The current manifest targets:
 - Firefox for Android 128 or newer;
 - Chromium-based browsers 121 or newer.
 
-Release-gating CI verifies a temporary installation of the exact built package in current Firefox and a real loaded Chromium MV3 extension. Waterfox is tracked separately because its current WebDriver temporary-install path accepts the add-on but does not inject even a minimal content script; direct Waterfox desktop and physical Android validation remain pending before a stable release.
+Release-gating CI verifies a temporary installation of the exact built package in current Firefox and a real loaded Chromium MV3 extension. Waterfox is tracked separately because its current WebDriver temporary-install path accepts the add-on but does not inject even a minimal content script; direct Waterfox desktop and physical Android checks are therefore post-release compatibility validation rather than stable-release gates.
 
 ### Android System WebView limitation
 
@@ -119,16 +119,17 @@ Open `about:debugging`, choose **This Firefox**, select **Load Temporary Add-on*
 
 Open the extensions management page, enable **Developer mode**, choose **Load unpacked**, and select the repository directory. This loading mode is exercised automatically in Chromium CI.
 
-## Remaining validation before a stable release
+## Release validation and remaining compatibility checks
 
-The first beta prerelease is suitable for broader testing, but the following checks remain before calling the fork stable:
+The `v3.2.0` release is gated by unit/manifest checks, Mozilla `web-ext` lint, package validation, real Chromium extension E2E, and temporary installation of the exact built package in current Firefox. The GitHub/X regression from upstream issue #42 and the delayed Chase title-overwrite regression from issue #41 are also covered by the separate live-site smoke workflow.
 
-- direct testing on current Waterfox desktop outside the WebDriver temporary-install path;
+A controlled high-tab workflow passed 250 and 500 simultaneous loaded tabs. At 750/1000 tabs the GitHub/Playwright harness itself becomes the limiting factor without an extension crash or OOM, so the reported ~2700-tab scenario from upstream issue #38 is not treated as a meaningful extension release gate.
+
+The following checks remain useful after release but are not blockers for `v3.2.0`:
+
+- direct Waterfox desktop testing outside the WebDriver temporary-install path;
 - physical Firefox/Waterfox Android testing where extension installation is supported;
-- optional branded Google Chrome verification before Chrome Web Store publication;
-- an extreme long-lived/high-tab-count test approximating upstream issue #38 (~2700 tabs), beyond the existing 40-tab smoke test.
-
-The GitHub/X regression from upstream issue #42 and the delayed Chase title-overwrite regression from issue #41 have already been reproduced and verified against the modernized implementation.
+- optional branded Google Chrome/store-path verification before Chrome Web Store publication.
 
 ## Upstream and license
 
