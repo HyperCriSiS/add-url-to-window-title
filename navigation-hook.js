@@ -6,6 +6,12 @@
 (() => {
   'use strict';
 
+  // Chromium exposes the Navigation API, which the isolated content script can
+  // observe directly. Avoid touching page history methods when that API exists.
+  if (globalThis.navigation?.addEventListener) {
+    return;
+  }
+
   const EVENT_NAME = 'au2wt:navigation';
   const notify = () => window.dispatchEvent(new Event(EVENT_NAME));
 

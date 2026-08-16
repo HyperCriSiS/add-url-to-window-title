@@ -35,12 +35,14 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [x] Give the fork its own Firefox extension ID instead of reusing the upstream signing identity.
 - [x] Explicitly enable Firefox for Android distribution with `gecko_android`.
 - [x] Declare that the extension performs no data collection/transmission using Firefox's built-in manifest consent metadata.
+- [x] Set supported Gecko baselines to Firefox 140 desktop and Firefox 142 Android, matching the manifest data-consent feature.
 
 ## P1 — Performance and maintenance
 
 - [x] Replace per-input listeners plus a whole-body MutationObserver with delegated `focusin` / `focusout` handling.
 - [x] Restrict field-attribute tracking to text-like input types.
 - [x] Remove the 1-second URL polling timer from every Firefox tab.
+- [x] Avoid History API monkey-patching in Chromium when the native Navigation API is available.
 - [x] Remove the vendored Bulma runtime dependency (~158 KB) from the options UI.
 - [x] Replace Bulma with a small native CSS file using browser/system colors and dark-mode support.
 - [x] Modernize options code to Promise-based WebExtension storage APIs.
