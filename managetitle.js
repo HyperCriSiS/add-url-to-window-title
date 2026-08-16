@@ -198,6 +198,19 @@
     scheduleRender({ captureExternalTitle: true });
   }
 
+  function getDiagnosticsStatus() {
+    return {
+      reachable: true,
+      titleManaged: Boolean(state.lastRenderedTitle) && document.title === state.lastRenderedTitle
+    };
+  }
+
+  Object.defineProperty(globalThis, 'AU2WTGetDiagnosticsStatus', {
+    value: getDiagnosticsStatus,
+    writable: false,
+    configurable: false
+  });
+
   function installNavigationTracking() {
     window.addEventListener(NAVIGATION_EVENT, onUrlMayHaveChanged);
     window.addEventListener('hashchange', onUrlMayHaveChanged, { passive: true });

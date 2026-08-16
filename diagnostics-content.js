@@ -6,28 +6,16 @@
   'use strict';
 
   const extensionApi = globalThis.browser ?? globalThis.chrome;
-  const core = globalThis.AU2WTCore;
-
-  function titleContainsManagedUrl() {
-    if (!core) {
-      return false;
-    }
-
-    return Object.values(core.URL_MODES).some(mode => {
-      const displayedUrl = core.getDisplayedUrl(location.href, location.hostname, mode);
-      return Boolean(displayedUrl) && document.title.includes(displayedUrl);
-    });
-  }
 
   extensionApi.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message?.type !== 'au2wt:diagnostics') {
       return false;
     }
 
-    sendResponse({
-      reachable: true,
-      titleManaged: titleContainsManagedUrl()
-    });
+    const getStatus = globalThis.AU2WTGetDiagnosticsStatus;
+    sendResponse(typeof getStatus === 'function'
+      ? getStatus()
+      : { reachable: true, titleManaged: false });
     return false;
   });
 })();
