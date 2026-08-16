@@ -98,6 +98,26 @@ def minimal_probe(manifest):
     }
 
 
+def minimal_mv2_probe(manifest):
+    manifest.clear()
+    manifest.update({
+        "manifest_version": 2,
+        "name": "Waterfox MV2 Content Script Probe",
+        "version": "1.0.0",
+        "permissions": ["http://*/*", "https://*/*"],
+        "content_scripts": [{
+            "matches": ["http://*/*", "https://*/*"],
+            "js": ["waterfox-probe.js"],
+            "run_at": "document_start"
+        }],
+        "browser_specific_settings": {
+            "gecko": {
+                "id": "waterfox-mv2-content-script-probe@w3b.world"
+            }
+        }
+    })
+
+
 def make_options():
     options = Options()
     options.add_argument("-headless")
@@ -162,6 +182,15 @@ def main():
             {"waterfox-probe.js": "document.title = 'Waterfox Probe';\n"},
         )
         run_probe(probe, url, "Waterfox Probe", "minimal MV3 content script")
+
+        mv2_probe = temp / "minimal-mv2-probe.xpi"
+        write_variant(
+            source,
+            mv2_probe,
+            minimal_mv2_probe,
+            {"waterfox-probe.js": "document.title = 'Waterfox MV2 Probe';\n"},
+        )
+        run_probe(mv2_probe, url, "Waterfox MV2 Probe", "minimal MV2 content script")
 
 
 if __name__ == "__main__":
