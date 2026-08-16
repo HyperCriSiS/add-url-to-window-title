@@ -17,7 +17,14 @@ test('Firefox manifest declares no data collection', () => {
 });
 
 test('Firefox Android distribution is explicitly enabled', () => {
-  assert.deepEqual(manifest.browser_specific_settings.gecko_android, {});
+  assert.equal(
+    manifest.browser_specific_settings.gecko_android.strict_min_version,
+    '142.0'
+  );
+});
+
+test('Firefox desktop minimum supports data consent metadata', () => {
+  assert.equal(manifest.browser_specific_settings.gecko.strict_min_version, '140.0');
 });
 
 test('fork uses its own extension ID', () => {
