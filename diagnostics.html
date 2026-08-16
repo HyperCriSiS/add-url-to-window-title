@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page diagnostics</title>
+  <link rel="stylesheet" href="diagnostics.css">
+</head>
+<body>
+  <main>
+    <h1 data-i18n="diagnosticsHeader">Page diagnostics</h1>
+    <p id="page" class="page-label" hidden></p>
+
+    <section id="result" class="result" data-state="loading" aria-live="polite">
+      <strong id="result-title" data-i18n="diagnosticsCheckingTitle">Checking current page…</strong>
+      <p id="result-detail" data-i18n="diagnosticsCheckingDetail">Testing whether the extension content script can reach this tab.</p>
+    </section>
+
+    <p class="privacy" data-i18n="diagnosticsPrivacy">Diagnostics stay inside the browser and are not stored or transmitted.</p>
+    <button id="settings" type="button" data-i18n="diagnosticsOpenSettings">Open settings</button>
+  </main>
+
+  <script src="diagnostics-core.js"></script>
+  <script src="diagnostics.js"></script>
+</body>
+</html>

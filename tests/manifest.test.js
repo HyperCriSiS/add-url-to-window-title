@@ -40,6 +40,14 @@ test('main-world navigation hook and isolated title script both run at document_
   assert.equal(manifest.content_scripts.length, 2);
   assert.equal(manifest.content_scripts[0].world, 'MAIN');
   assert.equal(manifest.content_scripts[0].run_at, 'document_start');
-  assert.deepEqual(manifest.content_scripts[1].js, ['title-core.js', 'managetitle.js']);
+  assert.deepEqual(manifest.content_scripts[1].js, ['title-core.js', 'managetitle.js', 'diagnostics-content.js']);
   assert.equal(manifest.content_scripts[1].run_at, 'document_start');
+});
+
+test('diagnostics action uses temporary active-tab access without broader tab or scripting permissions', () => {
+  assert.deepEqual(manifest.permissions, ['storage', 'activeTab']);
+  assert.equal(manifest.permissions.includes('tabs'), false);
+  assert.equal(manifest.permissions.includes('scripting'), false);
+  assert.equal(manifest.action.default_popup, 'diagnostics.html');
+  assert.equal(manifest.action.default_title, '__MSG_diagnosticsActionTitle__');
 });

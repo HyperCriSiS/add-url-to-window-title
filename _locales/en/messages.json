@@ -52,5 +52,74 @@
   },
   "optionsHelpLinkText": {
     "message": "Project & Help"
+  },
+  "diagnosticsActionTitle": {
+    "message": "Diagnose current page"
+  },
+  "diagnosticsHeader": {
+    "message": "Page diagnostics"
+  },
+  "diagnosticsCheckingTitle": {
+    "message": "Checking current page…"
+  },
+  "diagnosticsCheckingDetail": {
+    "message": "Testing whether the extension content script can reach this tab."
+  },
+  "diagnosticsPrivacy": {
+    "message": "Diagnostics stay inside the browser and are not stored or transmitted."
+  },
+  "diagnosticsOpenSettings": {
+    "message": "Open settings"
+  },
+  "diagnosticsPageLabel": {
+    "message": "Page"
+  },
+  "diagnosticsReachableTitle": {
+    "message": "Extension active"
+  },
+  "diagnosticsReachableDetail": {
+    "message": "The content script is running and the current title matches the extension output."
+  },
+  "diagnosticsOverriddenTitle": {
+    "message": "Title currently overwritten"
+  },
+  "diagnosticsOverriddenDetail": {
+    "message": "The content script is running, but the title did not match the expected extension output at the instant of this check."
+  },
+  "diagnosticsWebUnreachableTitle": {
+    "message": "Content script not reachable"
+  },
+  "diagnosticsWebUnreachableDetail": {
+    "message": "This is a normal web page, but the extension did not answer. Site permissions, browser policy, or an unsupported browser path may be blocking injection."
+  },
+  "diagnosticsInheritedTitle": {
+    "message": "Inherited-origin view"
+  },
+  "diagnosticsInheritedDetail": {
+    "message": "about:blank, about:srcdoc, data:, and blob: documents can only be modified when the browser assigns a supported opener or origin."
+  },
+  "diagnosticsRestrictedTitle": {
+    "message": "Restricted browser page"
+  },
+  "diagnosticsRestrictedDetail": {
+    "message": "Browser-internal and privileged pages reject WebExtension content scripts by design. The extension cannot modify this title."
+  },
+  "diagnosticsFileTitle": {
+    "message": "Local file not covered"
+  },
+  "diagnosticsFileDetail": {
+    "message": "This extension is intentionally limited to HTTP and HTTPS pages and does not request file access."
+  },
+  "diagnosticsExtensionPageTitle": {
+    "message": "Extension page"
+  },
+  "diagnosticsExtensionPageDetail": {
+    "message": "The extension does not modify its own internal pages."
+  },
+  "diagnosticsUnknownTitle": {
+    "message": "Unsupported or unavailable view"
+  },
+  "diagnosticsUnknownDetail": {
+    "message": "The browser did not expose a supported page that this extension can diagnose. Third-party Android System WebViews do not load browser extensions."
   }
 }

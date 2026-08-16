@@ -52,5 +52,74 @@
   },
   "optionsHelpLinkText": {
     "message": "Projekt & Hilfe"
+  },
+  "diagnosticsActionTitle": {
+    "message": "Aktuelle Seite diagnostizieren"
+  },
+  "diagnosticsHeader": {
+    "message": "Seitendiagnose"
+  },
+  "diagnosticsCheckingTitle": {
+    "message": "Aktuelle Seite wird geprüft…"
+  },
+  "diagnosticsCheckingDetail": {
+    "message": "Es wird geprüft, ob das Content-Script der Erweiterung diesen Tab erreicht."
+  },
+  "diagnosticsPrivacy": {
+    "message": "Die Diagnose bleibt im Browser und wird weder gespeichert noch übertragen."
+  },
+  "diagnosticsOpenSettings": {
+    "message": "Einstellungen öffnen"
+  },
+  "diagnosticsPageLabel": {
+    "message": "Seite"
+  },
+  "diagnosticsReachableTitle": {
+    "message": "Erweiterung aktiv"
+  },
+  "diagnosticsReachableDetail": {
+    "message": "Das Content-Script läuft und der aktuelle Titel entspricht der Ausgabe der Erweiterung."
+  },
+  "diagnosticsOverriddenTitle": {
+    "message": "Titel derzeit überschrieben"
+  },
+  "diagnosticsOverriddenDetail": {
+    "message": "Das Content-Script läuft, aber der Titel entsprach im Moment dieser Prüfung nicht der erwarteten Ausgabe der Erweiterung."
+  },
+  "diagnosticsWebUnreachableTitle": {
+    "message": "Content-Script nicht erreichbar"
+  },
+  "diagnosticsWebUnreachableDetail": {
+    "message": "Dies ist eine normale Webseite, aber die Erweiterung antwortet nicht. Website-Berechtigungen, Browser-Richtlinien oder ein nicht unterstützter Browserpfad können die Injektion blockieren."
+  },
+  "diagnosticsInheritedTitle": {
+    "message": "Ansicht mit geerbtem Ursprung"
+  },
+  "diagnosticsInheritedDetail": {
+    "message": "about:blank-, about:srcdoc-, data:- und blob:-Dokumente können nur geändert werden, wenn der Browser einen unterstützten Öffner oder Ursprung zuordnet."
+  },
+  "diagnosticsRestrictedTitle": {
+    "message": "Gesperrte Browserseite"
+  },
+  "diagnosticsRestrictedDetail": {
+    "message": "Browserinterne und privilegierte Seiten lehnen WebExtension-Content-Scripts grundsätzlich ab. Die Erweiterung kann diesen Titel nicht ändern."
+  },
+  "diagnosticsFileTitle": {
+    "message": "Lokale Datei nicht abgedeckt"
+  },
+  "diagnosticsFileDetail": {
+    "message": "Diese Erweiterung ist absichtlich auf HTTP- und HTTPS-Seiten beschränkt und fordert keinen Dateizugriff an."
+  },
+  "diagnosticsExtensionPageTitle": {
+    "message": "Erweiterungsseite"
+  },
+  "diagnosticsExtensionPageDetail": {
+    "message": "Die Erweiterung verändert ihre eigenen internen Seiten nicht."
+  },
+  "diagnosticsUnknownTitle": {
+    "message": "Nicht unterstützte oder nicht verfügbare Ansicht"
+  },
+  "diagnosticsUnknownDetail": {
+    "message": "Der Browser stellt keine unterstützte Seite bereit, die diese Erweiterung diagnostizieren kann. System-WebViews anderer Android-Apps laden keine Browser-Erweiterungen."
   }
 }
