@@ -1,0 +1,103 @@
+name: High-tab stress
+
+on:
+  push:
+    branches:
+      - dev-modernization
+    paths:
+      - .stress/request.json
+
+permissions:
+  contents: read
+
+jobs:
+  stress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout stress request
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Read and validate stress request
+        id: request
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const cfg = JSON.parse(fs.readFileSync('.stress/request.json', 'utf8'));
+          if (!Number.isInteger(cfg.tab_count) || cfg.tab_count < 1 || cfg.tab_count > 2700) {
+            throw new Error('tab_count must be an integer from 1 through 2700');
+          }
+          if (!/^[0-9a-f]{40}$/.test(cfg.target_sha ?? '')) {
+            throw new Error('target_sha must be a full commit SHA');
+          }
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `tab_count=${cfg.tab_count}\ntarget_sha=${cfg.target_sha}\n`
+          );
+          NODE
+
+      - name: Checkout immutable stress target
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.request.outputs.target_sha }}
+          fetch-depth: 0
+
+      - name: Verify target
+        env:
+          TARGET_SHA: ${{ steps.request.outputs.target_sha }}
+        run: test "$(git rev-parse HEAD)" = "$TARGET_SHA"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install pinned Playwright stress runtime
+        run: |
+          npm init -y >/dev/null
+          npm install --no-save --package-lock=false playwright@1.62.1
+          npx playwright install --with-deps --no-shell chromium
+
+      - name: Run high-tab Chromium stress
+        id: stress
+        continue-on-error: true
+        env:
+          AU2WT_TAB_COUNT: ${{ steps.request.outputs.tab_count }}
+        shell: bash
+        run: |
+          set -o pipefail
+          echo "Stress target: $(git rev-parse HEAD)"
+          echo "Requested simultaneous tabs: ${AU2WT_TAB_COUNT}"
+          /usr/bin/time -v node tests/e2e/chromium.mjs 2>&1 | tee stress.log
+
+      - name: Upload stress log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: high-tab-stress-${{ steps.request.outputs.tab_count }}
+          path: stress.log
+          if-no-files-found: warn
+
+      - name: Write stress summary
+        if: always()
+        env:
+          TAB_COUNT: ${{ steps.request.outputs.tab_count }}
+          TARGET_SHA: ${{ steps.request.outputs.target_sha }}
+          STRESS_OUTCOME: ${{ steps.stress.outcome }}
+        shell: bash
+        run: |
+          {
+            echo "## High-tab stress"
+            echo
+            echo "- Target: \`${TARGET_SHA}\`"
+            echo "- Simultaneous tabs: **${TAB_COUNT}**"
+            echo "- Outcome: **${STRESS_OUTCOME}**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce stress result
+        if: steps.stress.outcome != 'success'
+        run: exit 1
