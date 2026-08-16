@@ -105,14 +105,21 @@ jobs:
           name: extension-package
           path: web-ext-artifacts
 
-      - name: Install pinned geckodriver
-        uses: browser-actions/setup-geckodriver@bf8266f624ca122cedb6d0381a031f18f6c431cd
-        with:
-          geckodriver-version: 0.37.1
-          token: ${{ github.token }}
-
-      - name: Verify geckodriver
-        run: geckodriver --version
+      - name: Install and verify pinned geckodriver
+        env:
+          GECKODRIVER_VERSION: 0.37.1
+          GECKODRIVER_SHA256: e815130ea95983e162ae91843b48d3a3ce991735635fce83a647afde21e09f7e
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz"
+          url="https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/${archive}"
+          curl --fail --location --retry 3 --output "$archive" "$url"
+          echo "${GECKODRIVER_SHA256}  ${archive}" | sha256sum --check --strict
+          tar -xzf "$archive" geckodriver
+          install -m 0755 geckodriver "${RUNNER_TEMP}/geckodriver"
+          echo "${RUNNER_TEMP}" >> "${GITHUB_PATH}"
+          "${RUNNER_TEMP}/geckodriver" --version
 
       - name: Install pinned Selenium runtime
         run: |
@@ -158,14 +165,21 @@ jobs:
           tar -xjf "$archive"
           ./waterfox/waterfox --version
 
-      - name: Install pinned geckodriver
-        uses: browser-actions/setup-geckodriver@bf8266f624ca122cedb6d0381a031f18f6c431cd
-        with:
-          geckodriver-version: 0.37.1
-          token: ${{ github.token }}
-
-      - name: Verify geckodriver
-        run: geckodriver --version
+      - name: Install and verify pinned geckodriver
+        env:
+          GECKODRIVER_VERSION: 0.37.1
+          GECKODRIVER_SHA256: e815130ea95983e162ae91843b48d3a3ce991735635fce83a647afde21e09f7e
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz"
+          url="https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/${archive}"
+          curl --fail --location --retry 3 --output "$archive" "$url"
+          echo "${GECKODRIVER_SHA256}  ${archive}" | sha256sum --check --strict
+          tar -xzf "$archive" geckodriver
+          install -m 0755 geckodriver "${RUNNER_TEMP}/geckodriver"
+          echo "${RUNNER_TEMP}" >> "${GITHUB_PATH}"
+          "${RUNNER_TEMP}/geckodriver" --version
 
       - name: Install pinned Selenium runtime
         run: |
