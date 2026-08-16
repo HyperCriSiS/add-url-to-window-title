@@ -65,7 +65,7 @@ Relevant upstream reports and pull requests reviewed before the modernization wo
 - [ ] Test on branded Google Chrome separately if required before store publication.
 - [ ] Test on Firefox/Waterfox Android where extension support is enabled.
 - [x] Reproduce and verify upstream Issue #42 on the live GitHub Issues and X.com sites using the separate non-gating live-site smoke workflow.
-- [ ] Reproduce and verify upstream Issue #41 on Chase if access is possible.
+- [x] Reproduce and verify upstream Issue #41 on the live Chase homepage; the URL remained present in the title across 30 samples over 15 seconds.
 - [x] Stress-test mutation-heavy pages and a 40-simultaneous-tab Chromium smoke scenario.
 - [ ] Run an extreme long-lived tab-count test comparable to upstream Issue #38 (~2700 tabs) if practical.
 - [x] Validate temporary Firefox package installation and Chromium unpacked loading.
@@ -84,7 +84,7 @@ The CI suite now loads the extension into real browser processes instead of rely
 
 - Chromium: static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, rapid mutation stress, options UI, `storage.sync` live updates, focused input attributes, URL-without-query mode, and 40 simultaneous tabs.
 - Firefox: temporary installation of the exact CI-built package followed by static/dynamic titles, SPA navigation, late-created titles, replaced/moved `<title>`, title rebasing, and rapid mutation stress.
-- Live-site smoke: current GitHub Issues and X.com pages, kept separate from release-gating CI because external sites can change independently of the extension.
+- Live-site smoke: current GitHub Issues, X.com, and Chase pages. Chase is sampled repeatedly for 15 seconds to catch delayed title overwrites; external sites remain separate from release-gating CI because they can change independently of the extension.
 - Waterfox: exact CI-built package installation plus a diagnostic matrix that separates product logic, manifest features, MV3 content-script injection, and the WebDriver temporary-install path.
 
 ## Platform limitation: Android System WebView / embedded app views
