@@ -1,0 +1,55 @@
+name: Installable XPI publisher
+
+on:
+  push:
+    branches:
+      - dev-modernization
+    paths:
+      - '.release/xpi.json'
+      - '.github/workflows/xpi-package.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish-xpi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout request
+        uses: actions/checkout@v4
+
+      - name: Read XPI request
+        id: request
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const cfg = JSON.parse(fs.readFileSync('.release/xpi.json', 'utf8'));
+          if (!/^v\d+\.\d+\.\d+$/.test(cfg.tag ?? '')) throw new Error('Invalid tag');
+          if (!cfg.source_asset?.endsWith('.zip')) throw new Error('Invalid source asset');
+          if (!cfg.xpi_name?.endsWith('.xpi')) throw new Error('Invalid XPI name');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,
+            `tag=${cfg.tag}\nsource_asset=${cfg.source_asset}\nxpi_name=${cfg.xpi_name}\n`);
+          NODE
+
+      - name: Download validated release package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.request.outputs.tag }}
+          SOURCE_ASSET: ${{ steps.request.outputs.source_asset }}
+        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$SOURCE_ASSET"
+
+      - name: Prepare XPI
+        env:
+          SOURCE_ASSET: ${{ steps.request.outputs.source_asset }}
+          XPI_NAME: ${{ steps.request.outputs.xpi_name }}
+        run: |
+          cp "$SOURCE_ASSET" "$XPI_NAME"
+          sha256sum "$XPI_NAME" > XPI-SHA256SUMS.txt
+
+      - name: Attach XPI to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.request.outputs.tag }}
+          XPI_NAME: ${{ steps.request.outputs.xpi_name }}
+        run: gh release upload "$TAG" "$XPI_NAME" XPI-SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber
